@@ -78,7 +78,7 @@ func renderShadows(img *image.RGBA, shapes []Shape, g Grid, opt Options) {
 		if len(shape.Points) == 0 || !shape.DropsShadow() || shape.Type == TYPE_CUSTOM {
 			continue
 		}
-		path := shape.MakeIntoRenderPath(g /*, opt*/)
+		path := shape.MakeIntoRenderPath(g, false /*, opt*/)
 		if path == nil {
 			continue
 		}
@@ -156,14 +156,15 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 	}
 	//TODO: sort storage shapes
 	for _, shape := range storageShapes {
-		path := shape.MakeIntoRenderPath(diagram.Grid /*, opt*/)
+		fillPath := shape.MakeIntoRenderPath(diagram.Grid, false /*, opt*/)
 		//TODO: handle dashed
 		color := WHITE
 		if shape.FillColor != nil {
 			color = *shape.FillColor
 		}
-		Fill(img, path, color.RGBA())
-		Stroke(img, path, shape.StrokeColor.RGBA())
+		Fill(img, fillPath, color.RGBA())
+		strokePath := shape.MakeIntoRenderPath(diagram.Grid, true /*, opt*/)
+		Stroke(img, strokePath, shape.StrokeColor.RGBA())
 	}
 
 	sort.Sort(LargeFirst(diagram.Shapes))
@@ -185,21 +186,21 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 			continue
 		}
 
-		path := shape.MakeIntoRenderPath(diagram.Grid /*, opt*/)
-
 		// fill
-		if path != nil && shape.Closed && !shape.Dashed {
+		fillPath := shape.MakeIntoRenderPath(diagram.Grid, false /*, opt*/)
+		if fillPath != nil && shape.Closed && !shape.Dashed {
 			color := WHITE
 			if shape.FillColor != nil {
 				color = *shape.FillColor
 			}
-			Fill(img, path, color.RGBA())
+			Fill(img, fillPath, color.RGBA())
 		}
 
 		// draw
+		strokePath := shape.MakeIntoRenderPath(diagram.Grid, true /*, opt*/)
 		if shape.Type != TYPE_ARROWHEAD {
 			//TODO: support dashed lines
-			Stroke(img, path, shape.StrokeColor.RGBA())
+			Stroke(img, strokePath, shape.StrokeColor.RGBA())
 		}
 	}
 

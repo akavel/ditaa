@@ -276,7 +276,7 @@ func (s *Shape) makeDecisionPath() raster.Path {
 	return path
 }
 
-func (s *Shape) makeStoragePath(g Grid) raster.Path {
+func (s *Shape) makeStoragePath(g Grid, forStroke bool) raster.Path {
 	if len(s.Points) != 4 {
 		return nil
 	}
@@ -301,17 +301,23 @@ func (s *Shape) makeStoragePath(g Grid) raster.Path {
 	// return path
 
 	Pxy := func(x, y float64) raster.Point { return P(Point{X: x, Y: y}) }
-	//top of cylinder
+	// outline of cylinder: top-left...
 	path.Start(P(p1))
-	path.Add2(Pxy(p1.X+offx, p1.Y+offytop), Pxy((p1.X+p2.X)/2, p1.Y+offytop))
-	path.Add2(Pxy(p2.X-offx, p2.Y+offytop), P(p2))
-	path.Add2(Pxy(p2.X-offx, p2.Y-offytop), Pxy((p1.X+p2.X)/2, p2.Y-offytop))
-	path.Add2(Pxy(p1.X+offx, p1.Y-offytop), P(p1))
-	//side and bottom of cylinder
+	// ...left side...
 	path.Add1(P(p4))
+	// ...bottom curve...
 	path.Add2(Pxy(p4.X+offx, p4.Y+offybottom), Pxy((p4.X+p3.X)/2, p4.Y+offybottom))
 	path.Add2(Pxy(p3.X-offx, p3.Y+offybottom), P(p3))
+	// ...right side...
 	path.Add1(P(p2))
+	// ...top curve
+	path.Add2(Pxy(p2.X-offx, p2.Y-offytop), Pxy((p1.X+p2.X)/2, p2.Y-offytop))
+	path.Add2(Pxy(p1.X+offx, p1.Y-offytop), P(p1))
+	if forStroke {
+		// additional "3d" effect at the top - a down-bent curve
+		path.Add2(Pxy(p1.X+offx, p1.Y+offytop), Pxy((p1.X+p2.X)/2, p1.Y+offytop))
+		path.Add2(Pxy(p2.X-offx, p2.Y+offytop), P(p2))
+	}
 	return path
 }
 
@@ -333,7 +339,7 @@ func getCellEdgePointBetween(pointInCell, otherPoint Point, g Grid) Point {
 	panic("should not reach")
 }
 
-func (s *Shape) MakeIntoRenderPath(g Grid /*, opt Options*/) raster.Path {
+func (s *Shape) MakeIntoRenderPath(g Grid, forStroke bool /*, opt Options*/) raster.Path {
 	if s.Type == TYPE_POINT_MARKER {
 		panic("please handle markers separately")
 		return nil
@@ -352,7 +358,7 @@ func (s *Shape) MakeIntoRenderPath(g Grid /*, opt Options*/) raster.Path {
 		case TYPE_DECISION:
 			return s.makeDecisionPath()
 		case TYPE_STORAGE:
-			return s.makeStoragePath(g)
+			return s.makeStoragePath(g, forStroke)
 		case TYPE_ELLIPSE:
 			// FIXME(akavel): build with cubic Bezier curves and stroke with http://stackoverflow.com/q/408457
 			_ = fmt.Sprintf
