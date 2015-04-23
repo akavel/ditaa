@@ -253,8 +253,33 @@ func NewDiagram(grid *TextGrid) *Diagram {
 	}
 
 	//assign markup to shapes
-
-	//[MC] TODO: markup shapes
+	for _, pair := range grid.findMarkupTags() {
+		cell := graphical.Cell(pair.Cell)
+		p := graphical.Point{X: d.G.Grid.CellMidX(cell), Y: d.G.Grid.CellMidY(cell)}
+		containingShape := FindSmallestShapeContaining(p, d.G.Shapes)
+		if containingShape == nil {
+			continue
+		}
+		shapeCodes := map[string]graphical.ShapeType{
+			"d":  graphical.TYPE_DOCUMENT,
+			"s":  graphical.TYPE_STORAGE,
+			"io": graphical.TYPE_IO,
+			"c":  graphical.TYPE_DECISION,
+			"mo": graphical.TYPE_MANUAL_OPERATION,
+			"tr": graphical.TYPE_TRAPEZOID,
+			"o":  graphical.TYPE_ELLIPSE,
+		}
+		typ, ok := shapeCodes[pair.Tag]
+		if ok {
+			// TODO(akavel): translate full loadCustomShape() with getFromCustomShapes()
+			containingShape.Type = typ
+		} else {
+			containingShape.Type = graphical.TYPE_CUSTOM
+			// TODO(akavel): implement lines below:
+			// def := options.processingOptions.getFromCustomShapes(pair.Tag)
+			// containingShape.Definition = def
+		}
+	}
 
 	//make arrowheads
 	for _, c := range workGrid.FindArrowheads() {
