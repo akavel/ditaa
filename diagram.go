@@ -292,8 +292,17 @@ func NewDiagram(grid *TextGrid) *Diagram {
 	}
 
 	//make point markers
-
-	//[MC] TODO: point markers
+	for _, c := range grid.GetPointMarkersOnLine() {
+		cell := graphical.Cell(c)
+		d.G.Shapes = append(d.G.Shapes, graphical.Shape{
+			Points: []graphical.Point{
+				{X: d.G.Grid.CellMidX(cell), Y: d.G.Grid.CellMidY(cell)},
+			},
+			Type:        graphical.TYPE_POINT_MARKER,
+			FillColor:   &graphical.WHITE,
+			StrokeColor: graphical.Color{0, 0, 0, 255},
+		})
+	}
 
 	d.G.Shapes = removeDuplicateShapes(d.G.Shapes)
 

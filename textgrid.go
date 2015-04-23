@@ -536,6 +536,21 @@ func (t *TextGrid) ReplacePointMarkersOnLine() {
 	}
 }
 
+func (t *TextGrid) GetPointMarkersOnLine() []Cell {
+	result := []Cell{}
+	w, h := t.Width(), t.Height()
+	for yi := 0; yi < h; yi++ {
+		for xi := 0; xi < w; xi++ {
+			c := Cell{xi, yi}
+			ch := t.GetCell(c)
+			if isOneOf(ch, text_pointMarkers) && t.IsStarOnLine(c) {
+				result = append(result, c)
+			}
+		}
+	}
+	return result
+}
+
 func (t *TextGrid) FindArrowheads() []Cell {
 	result := []Cell{}
 	w, h := t.Width(), t.Height()
