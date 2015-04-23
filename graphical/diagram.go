@@ -116,11 +116,19 @@ func blurShadows(img *image.RGBA) {
 type LargeFirst []Shape
 
 func (t LargeFirst) Len() int           { return len(t) }
+func (t LargeFirst) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
 func (t LargeFirst) Less(i, j int) bool { return t[i].CalcArea() > t[j].CalcArea() }
-func (t LargeFirst) Swap(i, j int) {
-	tmp := t[i]
-	t[i] = t[j]
-	t[j] = tmp
+
+type BottomFirst []Shape
+
+func (t BottomFirst) Len() int      { return len(t) }
+func (t BottomFirst) Swap(i, j int) { t[i], t[j] = t[j], t[i] }
+func (t BottomFirst) Less(i, j int) bool {
+	bounds1 := t[i].MakeIntoPath().BoundingBox()
+	bounds2 := t[j].MakeIntoPath().BoundingBox()
+	y1 := (bounds1.Min.Y + bounds1.Max.Y) / 2
+	y2 := (bounds2.Min.Y + bounds2.Max.Y) / 2
+	return y1 > y2
 }
 
 func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetype.Font) error {
@@ -154,7 +162,7 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 			storageShapes = append(storageShapes, shape)
 		}
 	}
-	//TODO: sort storage shapes
+	sort.Sort(BottomFirst(storageShapes))
 	for _, shape := range storageShapes {
 		fillPath := shape.MakeIntoRenderPath(diagram.Grid, false /*, opt*/)
 		//TODO: handle dashed
