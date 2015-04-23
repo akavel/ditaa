@@ -301,6 +301,8 @@ func (s *Shape) makeStoragePath(g Grid, forStroke bool) raster.Path {
 	// return path
 
 	Pxy := func(x, y float64) raster.Point { return P(Point{X: x, Y: y}) }
+	offytop *= .72
+	offybottom *= .72
 	// outline of cylinder: top-left...
 	path.Start(P(p1))
 	// ...left side...
