@@ -289,13 +289,28 @@ func (s *Shape) makeStoragePath(g Grid) raster.Path {
 	offybottom := float64(g.CellH) * 10 / 14
 
 	path := raster.Path{}
+	// FIXME(akavel): build with cubic Bezier curves and stroke with http://stackoverflow.com/q/408457
+	// //top of cylinder
+	// path.Start(P(p1))
+	// path.Add3(P(Point{X: p1.X + offx, Y: p1.Y + offytop}), P(Point{X: p2.X - offx, Y: p2.Y + offytop}), P(p2))
+	// path.Add3(P(Point{X: p2.X - offx, Y: p2.Y - offytop}), P(Point{X: p1.X + offx, Y: p1.Y - offytop}), P(p1))
+	// //side of cylinder
+	// path.Add1(P(p4))
+	// path.Add3(P(Point{X: p4.X + offx, Y: p4.Y + offybottom}), P(Point{X: p3.X - offx, Y: p3.Y + offybottom}), P(p3))
+	// path.Add1(P(p2))
+	// return path
+
+	Pxy := func(x, y float64) raster.Point { return P(Point{X: x, Y: y}) }
 	//top of cylinder
 	path.Start(P(p1))
-	path.Add3(P(Point{X: p1.X + offx, Y: p1.Y + offytop}), P(Point{X: p2.X - offx, Y: p2.Y + offytop}), P(p2))
-	path.Add3(P(Point{X: p2.X - offx, Y: p2.Y - offytop}), P(Point{X: p1.X + offx, Y: p1.Y - offytop}), P(p1))
-	//side of cylinder
+	path.Add2(Pxy(p1.X+offx, p1.Y+offytop), Pxy((p1.X+p2.X)/2, p1.Y+offytop))
+	path.Add2(Pxy(p2.X-offx, p2.Y+offytop), P(p2))
+	path.Add2(Pxy(p2.X-offx, p2.Y-offytop), Pxy((p1.X+p2.X)/2, p2.Y-offytop))
+	path.Add2(Pxy(p1.X+offx, p1.Y-offytop), P(p1))
+	//side and bottom of cylinder
 	path.Add1(P(p4))
-	path.Add3(P(Point{X: p4.X + offx, Y: p4.Y + offybottom}), P(Point{X: p3.X - offx, Y: p3.Y + offybottom}), P(p3))
+	path.Add2(Pxy(p4.X+offx, p4.Y+offybottom), Pxy((p4.X+p3.X)/2, p4.Y+offybottom))
+	path.Add2(Pxy(p3.X-offx, p3.Y+offybottom), P(p3))
 	path.Add1(P(p2))
 	return path
 }
@@ -336,9 +351,10 @@ func (s *Shape) MakeIntoRenderPath(g Grid /*, opt Options*/) raster.Path {
 			return s.makeTrapezoidPath(g /*, opt*/, false)
 		case TYPE_DECISION:
 			return s.makeDecisionPath()
-		//case TYPE_STORAGE:
-		//	return s.makeStoragePath(g)
-		case TYPE_STORAGE, TYPE_ELLIPSE:
+		case TYPE_STORAGE:
+			return s.makeStoragePath(g)
+		case TYPE_ELLIPSE:
+			// FIXME(akavel): build with cubic Bezier curves and stroke with http://stackoverflow.com/q/408457
 			_ = fmt.Sprintf
 			//panic(fmt.Sprintf("niy for type %d", s.Type))
 			//TODO: fixme

@@ -151,7 +151,7 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 	for _, shape := range diagram.Shapes {
 		if shape.Type == TYPE_STORAGE {
 			//TODO: freetype-go doesn't implement stroking cubic paths -- need to fix or walk around
-			//storageShapes = append(storageShapes, shape)
+			storageShapes = append(storageShapes, shape)
 		}
 	}
 	//TODO: sort storage shapes
