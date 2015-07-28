@@ -556,16 +556,12 @@ func getFilledEquivalent(cells *CellSet, grid *TextGrid) *CellSet {
 	//find a cell that has a blank both on the east and the west
 	// NOTE(akavel): or bottom-right cell, apparently - bug?
 	c := Cell{0, 0}
-outer:
-	for y := 0; y < grid.Height(); y++ {
-		for x := 0; x < grid.Width(); x++ {
-			c = Cell{x, y}
-			if grid.IsBlank(c) || !grid.IsBlank(c.East()) || !grid.IsBlank(c.West()) {
-				continue
-			}
-			break outer
+	grid.foreach(func(c Cell) interface{} {
+		if grid.IsBlank(c) || !grid.IsBlank(c.East()) || !grid.IsBlank(c.West()) {
+			return nil
 		}
-	}
+		return false
+	})
 	// found
 	c = c.East()
 	if grid.IsOutOfBounds(c) {
@@ -646,13 +642,12 @@ func makeScaledOneThirdEquivalent(cells *CellSet) *CellSet {
 	FillCellsWith(gridBig.Rows, cells, '*')
 
 	gridSmall := NewTextGrid((bb.Max.X+2)/3, (bb.Max.Y+2)/3)
-	for y := 0; y < gridBig.Height(); y++ {
-		for x := 0; x < gridBig.Width(); x++ {
-			if !gridBig.IsBlank(Cell{x, y}) {
-				gridSmall.Set(x/3, y/3, '*')
-			}
+	gridBig.foreach(func(c Cell) interface{} {
+		if !gridBig.IsBlank(c) {
+			gridSmall.Set(c.X/3, c.Y/3, '*')
 		}
-	}
+		return nil
+	})
 	return gridSmall.GetAllNonBlank()
 }
 

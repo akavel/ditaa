@@ -332,21 +332,17 @@ func (t *TextGrid) fillContinuousArea(x, y int, ch rune) *CellSet {
 
 // Makes blank all the cells that contain non-text elements.
 func (t *TextGrid) RemoveNonText() {
-	w, h := t.Width(), t.Height()
-
 	//the following order is significant
 	//since the south-pointing arrowheads
 	//are determined based on the surrounding boundaries
 
 	// remove arrowheads
-	for yi := 0; yi < h; yi++ {
-		for xi := 0; xi < w; xi++ {
-			c := Cell{xi, yi}
-			if t.IsArrowhead(c) {
-				t.SetCell(c, ' ')
-			}
+	t.foreach(func(c Cell) interface{} {
+		if t.IsArrowhead(c) {
+			t.SetCell(c, ' ')
 		}
-	}
+		return nil
+	})
 
 	// remove color codes
 	for _, pair := range t.FindColorCodes() {
@@ -362,14 +358,12 @@ func (t *TextGrid) RemoveNonText() {
 
 	// remove boundaries
 	rm := []Cell{}
-	for yi := 0; yi < h; yi++ {
-		for xi := 0; xi < w; xi++ {
-			c := Cell{xi, yi}
-			if t.IsBoundary(c) {
-				rm = append(rm, c)
-			}
+	t.foreach(func(c Cell) interface{} {
+		if t.IsBoundary(c) {
+			rm = append(rm, c)
 		}
-	}
+		return nil
+	})
 	for _, c := range rm {
 		t.SetCell(c, ' ')
 	}
@@ -408,26 +402,23 @@ type CellTagPair struct {
 
 func (t *TextGrid) findMarkupTags() []CellTagPair {
 	result := []CellTagPair{}
-	w, h := t.Width(), t.Height()
-	for y := 0; y < h; y++ {
-		for x := 0; x < w-3; x++ {
-			cell := Cell{x, y}
-			c := t.GetCell(cell)
-			if c != '{' {
-				continue
-			}
-			rowPart := string(t.Rows[y][x:])
-			m := tagPattern.FindStringSubmatch(rowPart)
-			if len(m) == 0 {
-				continue
-			}
-			tagName := m[1]
-			if _, ok := markupTags[tagName]; !ok {
-				continue
-			}
-			result = append(result, CellTagPair{cell, tagName})
+	t.foreach(func(c Cell) interface{} {
+		ch := t.GetCell(c)
+		if ch != '{' {
+			return nil
 		}
-	}
+		rowPart := string(t.Rows[c.Y][c.X:])
+		m := tagPattern.FindStringSubmatch(rowPart)
+		if len(m) == 0 {
+			return nil
+		}
+		tagName := m[1]
+		if _, ok := markupTags[tagName]; !ok {
+			return nil
+		}
+		result = append(result, CellTagPair{c, tagName})
+		return nil
+	})
 	return result
 }
 
