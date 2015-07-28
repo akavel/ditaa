@@ -26,7 +26,7 @@ func run() error {
 	flag.Parse()
 
 	const (
-		sources = "orig-java/tests/text"
+		sources = "testdata/"
 		results = "tmp/testimgs"
 	)
 	os.MkdirAll(results, 0777)

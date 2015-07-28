@@ -55,6 +55,18 @@ func CopyTextGrid(other *TextGrid) *TextGrid {
 	return &t
 }
 
+func (t TextGrid) foreach(f func(Cell) interface{}) interface{} {
+	for y := range t.Rows {
+		for x := range t.Rows[y] {
+			result := f(Cell{x, y})
+			if result != nil {
+				return result
+			}
+		}
+	}
+	return nil
+}
+
 func (t1 TextGrid) Equals(t2 TextGrid) bool {
 	if len(t1.Rows) != len(t2.Rows) {
 		return false
