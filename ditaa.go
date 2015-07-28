@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"io"
 	"os"
 
 	"github.com/akavel/ditaa/graphical"
@@ -34,8 +35,26 @@ func run(infile, outfile string) error {
 	if err != nil {
 		return err
 	}
+	w, err := os.Create(outfile)
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+	wbuf := bufio.NewWriter(w)
+	err = RenderPNG(r, wbuf)
+	if err != nil {
+		return err
+	}
+	err = wbuf.Flush()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func RenderPNG(r io.Reader, w io.Writer) error {
 	grid := NewTextGrid(0, 0)
-	err = grid.LoadFrom(r)
+	err := grid.LoadFrom(r)
 	if err != nil {
 		return err
 	}
@@ -51,17 +70,10 @@ func run(infile, outfile string) error {
 	if err != nil {
 		return err
 	}
-	w, err := os.Create(outfile)
-	if err != nil {
-		return err
-	}
-	defer w.Close()
 
-	wbuf := bufio.NewWriter(w)
-	err = png.Encode(wbuf, img)
+	err = png.Encode(w, img)
 	if err != nil {
 		return err
 	}
-	err = wbuf.Flush()
-	return err
+	return nil
 }
