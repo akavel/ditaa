@@ -1,3 +1,0 @@
-Eclipse Setup:
-
-JDK_LIB should be set to the location of tools.jar which is necessary for the taglet.

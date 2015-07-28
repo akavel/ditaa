@@ -1,1 +1,0 @@
-Empty directory for placing images during visual unit tests.
