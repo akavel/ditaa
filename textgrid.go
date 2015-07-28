@@ -56,15 +56,32 @@ func CopyTextGrid(other *TextGrid) *TextGrid {
 }
 
 func (t TextGrid) foreach(f func(Cell) interface{}) interface{} {
-	for y := range t.Rows {
-		for x := range t.Rows[y] {
-			result := f(Cell{x, y})
-			if result != nil {
-				return result
-			}
+	for c, iter := t.Iter(); iter.Ok(); c, iter = iter.Iter() {
+		result := f(c)
+		if result != nil {
+			return result
 		}
 	}
 	return nil
+}
+
+func (t TextGrid) Iter() (Cell, CellIter) {
+	return Cell{0, 0}, CellIter{t.Rows, 0, 0}
+}
+
+type CellIter struct {
+	rows [][]rune
+	x, y int
+}
+
+func (iter CellIter) Ok() bool { return iter.y < len(iter.rows) && iter.x < len(iter.rows[0]) }
+func (iter CellIter) Iter() (Cell, CellIter) {
+	iter.x++
+	if iter.x > len(iter.rows[iter.y]) {
+		iter.y++
+		iter.x = 0
+	}
+	return Cell{iter.x, iter.y}, iter
 }
 
 func (t1 TextGrid) Equals(t2 TextGrid) bool {
@@ -483,23 +500,20 @@ func (t *TextGrid) DEBUG() string {
 // or vertical lines, with the appropriate character that will make the
 // line continuous (| for vertical and - for horizontal lines)
 func (t *TextGrid) ReplaceTypeOnLine() {
-	w, h := t.Width(), t.Height()
-	for yi := 0; yi < h; yi++ {
-		for xi := 0; xi < w; xi++ {
-			ch := t.Get(xi, yi)
-			if !unicode.In(ch, unicode.Digit, unicode.Letter) {
-				continue
-			}
-			onH := t.isOnHorizontalLine(xi, yi)
-			onV := t.isOnVerticalLine(xi, yi)
-			switch {
-			case onH && onV:
-				t.Set(xi, yi, '+')
-			case onH:
-				t.Set(xi, yi, '-')
-			case onV:
-				t.Set(xi, yi, '|')
-			}
+	for c, iter := t.Iter(); iter.Ok(); c, iter = iter.Iter() {
+		ch := t.GetCell(c)
+		if !unicode.In(ch, unicode.Digit, unicode.Letter) {
+			continue
+		}
+		onH := t.isOnHorizontalLine(c)
+		onV := t.isOnVerticalLine(c)
+		switch {
+		case onH && onV:
+			t.SetCell(c, '+')
+		case onH:
+			t.SetCell(c, '-')
+		case onV:
+			t.SetCell(c, '|')
 		}
 	}
 }
