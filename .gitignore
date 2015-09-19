@@ -1,0 +1,16 @@
+*.exe
+*.class
+/orig-java/bin/
+/orig-java/tests/images/*.png
+/orig-java/.settings/org.eclipse.jdt.ui.prefs
+/orig-java/tests/xmls/*.xml
+/rendertest/imgs/*.png
+/orig-java/javacpath.txt
+/orig-java/javapath.txt
+/tags
+.*.swp
+.*.swo
+.swp
+.swo
+/tmp/testimgs
+
