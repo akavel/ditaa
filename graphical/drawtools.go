@@ -5,7 +5,9 @@ import (
 	"image/color"
 	"math"
 
-	"code.google.com/p/jamslam-freetype-go/freetype/raster"
+	"golang.org/x/image/math/fixed"
+
+	"github.com/golang/freetype/raster"
 )
 
 const (
@@ -45,19 +47,16 @@ func (p1 Point) SouthOf(p2 Point) bool { return p1.Y > p2.Y }
 func (p1 Point) WestOf(p2 Point) bool  { return p1.X < p2.X }
 func (p1 Point) EastOf(p2 Point) bool  { return p1.X > p2.X }
 
-func P(p Point) raster.Point {
+func P(p Point) fixed.Point26_6 {
 	//TODO: handle fractional part too, but probably not needed
-	return raster.Point{
-		raster.Fix32(int(p.X)) << 8,
-		raster.Fix32(int(p.Y)) << 8,
-	}
+	return fixed.P(int(p.X), int(p.Y))
 }
 
-func ftofix(f float64) raster.Fix32 {
+func ftofix(f float64) fixed.Int26_6 {
 	//TODO: verify this is OK
 	a := math.Trunc(f)
-	b := math.Ldexp(math.Abs(f-a), 8)
-	return raster.Fix32(a)<<8 + raster.Fix32(b)
+	b := math.Ldexp(math.Abs(f-a), 6)
+	return fixed.Int26_6(a)<<6 + fixed.Int26_6(b)
 }
 
 func Stroke(img *image.RGBA, path raster.Path, color color.RGBA) {
@@ -79,8 +78,8 @@ func Fill(img *image.RGBA, path raster.Path, color color.RGBA) {
 
 func Circle(x, y, r float64) raster.Path {
 	//panic(fmt.Sprint(x, y, r))
-	P := func(x, y float64) raster.Point {
-		return raster.Point{ftofix(x), ftofix(y)}
+	P := func(x, y float64) fixed.Point26_6 {
+		return fixed.Point26_6{ftofix(x), ftofix(y)}
 	}
 	p1 := P(x+r, y)
 	p2 := P(x, y+r)

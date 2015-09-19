@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"code.google.com/p/jamslam-freetype-go/freetype"
-	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
 
 	"github.com/akavel/ditaa/embd"
 	"github.com/akavel/ditaa/fontmeasure"

@@ -1,8 +1,10 @@
 package fontmeasure
 
 import (
-	"code.google.com/p/jamslam-freetype-go/freetype"
-	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
+	"golang.org/x/image/math/fixed"
 )
 
 // go:generate go-bindata -pkg rsrc -o rsrc/font.ttf.go -ignore \.(java|class|txt)$ -prefix orig-java/src/org/stathissideris/ascii2image/graphics orig-java/src/org/stathissideris/ascii2image/graphics
@@ -15,9 +17,9 @@ type Font struct {
 	Size float64
 }
 
-func (f Font) scale() int32 {
+func (f Font) scale() fixed.Int26_6 {
 	// See: freetype.Context#recalc()
-	// at: https://code.google.com/p/freetype-go/source/browse/freetype/freetype.go#242
+	// at: https://github.com/golang/freetype/blob/41fa49aa5b23cc7c4082c9aaaf2da41e195602d9/freetype.go#L263
 	// also a comment from the same file:
 	// "scale is the number of 26.6 fixed point units in 1 em"
 	// (where 26.6 means 26 bits integer and 6 fractional)
@@ -25,41 +27,44 @@ func (f Font) scale() int32 {
 	// "If the device space involves pixels, 64 units
 	// per pixel is recommended, since that is what
 	// the bytecode hinter uses [...]".
-	return int32(f.Size * f.DPI * (64.0 / 72.0))
+	return fixed.Int26_6(f.Size * f.DPI * (64.0 / 72.0))
 }
 
 func (f Font) Baseline() int {
-	return int(f.Font.Bounds(f.scale()).YMax >> 6)
+	return int(f.Font.Bounds(f.scale()).Max.Y >> 6)
 	// or use f.Font.VMetric() for some glyph?
 }
 
 func (f Font) Advance() int {
 	b := f.Font.Bounds(f.scale())
-	return int((b.YMax - b.YMin) >> 6) // or -1 in inner parens?
+	return int((b.Max.Y - b.Min.Y) >> 6) // or -1 in inner parens?
 	// or use f.Font.VMetric() for some glyph?
 }
 
 func (f Font) Ascent() int {
 	// ok or not?
 	b := f.Font.Bounds(f.scale())
-	return int(b.YMax >> 6)
+	return int(b.Max.Y >> 6)
 }
 
 func (f Font) WidthFor(s string) int {
-	ctx := prepCtx(&f)
-	w, _, err := ctx.MeasureString(s)
-	if err != nil {
-		panic(err)
-	}
-	return freetype.Pixel(w)
+	face := truetype.NewFace(f.Font, &truetype.Options{
+		Size: f.Size,
+		DPI:  f.DPI,
+		// TODO(akavel): Hinting: font.HintingFull, // ?
+	})
+	drawer := font.Drawer{Face: face}
+	advance := drawer.MeasureString(s)
+	return int(advance >> 6)
 }
 
 func (f Font) ZHeight() int {
 	z := f.Font.Index('Z')
-	glyph := truetype.NewGlyphBuf()
-	glyph.Load(f.Font, f.scale(), z, nil)
+	glyph := truetype.GlyphBuf{}
+	// TODO(akavel): font.HintingFull ?
+	glyph.Load(f.Font, f.scale(), z, font.HintingNone)
 	// TODO(akavel): or, use MeasureString("Z")?
-	return int((glyph.B.YMax - glyph.B.YMin) >> 6)
+	return int((glyph.Bounds.Max.Y - glyph.Bounds.Min.Y) >> 6)
 }
 
 func prepFont(font *truetype.Font) Font {
@@ -105,31 +110,21 @@ func prepCtx(font *Font) *freetype.Context {
 func GetFontForWidth(font *truetype.Font, w int, s string) *Font {
 	// fmt.Println("MCDBG GetFontForWidth w=", w, "s=", s)
 	measure := prepFont(font)
-	ctx := prepCtx(&measure)
-	fontW, _, err := ctx.MeasureString(s)
-	// FIXME(akavel): panic? return error?
-	if err != nil {
-		panic(err)
-	}
+	fontW := measure.WidthFor(s)
 	direction := 1.0
-	if freetype.Pixel(fontW) > w {
+	if fontW > w {
 		direction = -1.0
 	}
 	measure.Size += direction
 	for measure.Size > 0 {
-		ctx.SetFontSize(measure.Size)
-		fontW, _, err = ctx.MeasureString(s)
-		// FIXME(akavel): panic? return error?
-		if err != nil {
-			panic(err)
-		}
+		fontW = measure.WidthFor(s)
 		if direction > 0 {
-			if freetype.Pixel(fontW) > w {
+			if fontW > w {
 				measure.Size -= 1
 				return &measure
 			}
 		} else {
-			if freetype.Pixel(fontW) < w {
+			if fontW < w {
 				return &measure
 			}
 		}

@@ -10,8 +10,8 @@ import (
 
 	"code.google.com/p/graphics-go/graphics"
 	"code.google.com/p/graphics-go/graphics/interp"
-	"code.google.com/p/jamslam-freetype-go/freetype"
-	"code.google.com/p/jamslam-freetype-go/freetype/truetype"
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
 )
 
 const DEBUG = true

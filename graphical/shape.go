@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"math"
 
-	"code.google.com/p/jamslam-freetype-go/freetype/raster"
+	"golang.org/x/image/math/fixed"
+
 	"github.com/akavel/polyclip-go"
+	"github.com/golang/freetype/raster"
 )
 
 type Grid struct {
@@ -300,7 +302,7 @@ func (s *Shape) makeStoragePath(g Grid, forStroke bool) raster.Path {
 	// path.Add1(P(p2))
 	// return path
 
-	Pxy := func(x, y float64) raster.Point { return P(Point{X: x, Y: y}) }
+	Pxy := func(x, y float64) fixed.Point26_6 { return P(Point{X: x, Y: y}) }
 	offytop *= .72
 	offybottom *= .72
 	// outline of cylinder: top-left...
