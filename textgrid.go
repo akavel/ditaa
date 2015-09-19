@@ -56,8 +56,8 @@ func CopyTextGrid(other *TextGrid) *TextGrid {
 }
 
 func (t TextGrid) foreach(f func(Cell) interface{}) interface{} {
-	for c, iter := t.Iter(); iter.Ok(); c, iter = iter.Iter() {
-		result := f(c)
+	for it := t.Iter(); it.Next(); {
+		result := f(it.Cell())
 		if result != nil {
 			return result
 		}
@@ -65,8 +65,8 @@ func (t TextGrid) foreach(f func(Cell) interface{}) interface{} {
 	return nil
 }
 
-func (t TextGrid) Iter() (Cell, CellIter) {
-	return Cell{0, 0}, CellIter{t.Rows, 0, 0}
+func (t TextGrid) Iter() CellIter {
+	return CellIter{t.Rows, -1, 0}
 }
 
 type CellIter struct {
@@ -74,15 +74,18 @@ type CellIter struct {
 	x, y int
 }
 
-func (iter CellIter) Ok() bool { return iter.y < len(iter.rows) && iter.x < len(iter.rows[0]) }
-func (iter CellIter) Iter() (Cell, CellIter) {
-	iter.x++
-	if iter.x > len(iter.rows[iter.y]) {
-		iter.y++
-		iter.x = 0
+func (it *CellIter) Next() bool {
+	if it.y >= len(it.rows) {
+		return false
 	}
-	return Cell{iter.x, iter.y}, iter
+	it.x++
+	if it.x >= len(it.rows[it.y]) {
+		it.y++
+		it.x = 0
+	}
+	return it.y < len(it.rows)
 }
+func (it CellIter) Cell() Cell { return Cell{it.x, it.y} }
 
 func (t1 TextGrid) Equals(t2 TextGrid) bool {
 	if len(t1.Rows) != len(t2.Rows) {
@@ -500,7 +503,8 @@ func (t *TextGrid) DEBUG() string {
 // or vertical lines, with the appropriate character that will make the
 // line continuous (| for vertical and - for horizontal lines)
 func (t *TextGrid) ReplaceTypeOnLine() {
-	for c, iter := t.Iter(); iter.Ok(); c, iter = iter.Iter() {
+	for it := t.Iter(); it.Next(); {
+		c := it.Cell()
 		ch := t.GetCell(c)
 		if !unicode.In(ch, unicode.Digit, unicode.Letter) {
 			continue

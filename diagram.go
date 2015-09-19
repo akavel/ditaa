@@ -556,7 +556,8 @@ func getFilledEquivalent(cells *CellSet, grid *TextGrid) *CellSet {
 	//find a cell that has a blank both on the east and the west
 	// NOTE(akavel): or bottom-right cell, apparently - bug?
 	c := Cell{0, 0}
-	grid.foreach(func(c Cell) interface{} {
+	grid.foreach(func(c2 Cell) interface{} {
+		c = c2
 		if grid.IsBlank(c) || !grid.IsBlank(c.East()) || !grid.IsBlank(c.West()) {
 			return nil
 		}
