@@ -238,15 +238,12 @@ func (t *TextGrid) hasEntryPoint(c Cell, entryid int) bool {
 }
 
 func (t *TextGrid) HasBlankCells() bool {
-	result := false
-	t.foreach(func(c Cell) interface{} {
-		if t.IsBlank(c) {
-			result = true
+	for it := t.Iter(); it.Next(); {
+		if t.IsBlank(it.Cell()) {
 			return true
 		}
-		return nil
-	})
-	return result
+	}
+	return false
 }
 
 func (t *TextGrid) CellContainsDashedLineChar(c Cell) bool {

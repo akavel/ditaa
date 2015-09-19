@@ -155,12 +155,14 @@ func (s *CellSet) getTypeAccordingToFillMethod(grid *TextGrid) CellSetType {
 	temp := NewTextGrid(0, 0)
 	temp.Rows = NewAbstractionGrid(subGrid, tempSet).Rows
 
-	fillCell := temp.foreach(func(c Cell) interface{} {
+	var fillCell *Cell
+	for it := temp.Iter(); it.Next(); {
+		c := it.Cell()
 		if temp.IsBlank(c) {
-			return &c
+			fillCell = &c
+			break
 		}
-		return nil
-	}).(*Cell)
+	}
 	if fillCell == nil {
 		fmt.Fprintln(os.Stderr, "Unexpected error: fill method cannot fill anywhere")
 		return SET_UNDETERMINED

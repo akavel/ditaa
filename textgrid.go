@@ -55,16 +55,6 @@ func CopyTextGrid(other *TextGrid) *TextGrid {
 	return &t
 }
 
-func (t TextGrid) foreach(f func(Cell) interface{}) interface{} {
-	for it := t.Iter(); it.Next(); {
-		result := f(it.Cell())
-		if result != nil {
-			return result
-		}
-	}
-	return nil
-}
-
 func (t TextGrid) Iter() CellIter {
 	return CellIter{t.Rows, -1, 0}
 }
@@ -357,12 +347,11 @@ func (t *TextGrid) RemoveNonText() {
 	//are determined based on the surrounding boundaries
 
 	// remove arrowheads
-	t.foreach(func(c Cell) interface{} {
-		if t.IsArrowhead(c) {
-			t.SetCell(c, ' ')
+	for it := t.Iter(); it.Next(); {
+		if t.IsArrowhead(it.Cell()) {
+			t.SetCell(it.Cell(), ' ')
 		}
-		return nil
-	})
+	}
 
 	// remove color codes
 	for _, pair := range t.FindColorCodes() {
@@ -378,12 +367,11 @@ func (t *TextGrid) RemoveNonText() {
 
 	// remove boundaries
 	rm := []Cell{}
-	t.foreach(func(c Cell) interface{} {
-		if t.IsBoundary(c) {
-			rm = append(rm, c)
+	for it := t.Iter(); it.Next(); {
+		if t.IsBoundary(it.Cell()) {
+			rm = append(rm, it.Cell())
 		}
-		return nil
-	})
+	}
 	for _, c := range rm {
 		t.SetCell(c, ' ')
 	}
@@ -422,23 +410,23 @@ type CellTagPair struct {
 
 func (t *TextGrid) findMarkupTags() []CellTagPair {
 	result := []CellTagPair{}
-	t.foreach(func(c Cell) interface{} {
+	for it := t.Iter(); it.Next(); {
+		c := it.Cell()
 		ch := t.GetCell(c)
 		if ch != '{' {
-			return nil
+			continue
 		}
 		rowPart := string(t.Rows[c.Y][c.X:])
 		m := tagPattern.FindStringSubmatch(rowPart)
 		if len(m) == 0 {
-			return nil
+			continue
 		}
 		tagName := m[1]
 		if _, ok := markupTags[tagName]; !ok {
-			return nil
+			continue
 		}
 		result = append(result, CellTagPair{c, tagName})
-		return nil
-	})
+	}
 	return result
 }
 
