@@ -68,16 +68,16 @@ type Dasher struct {
 }
 
 func (d *Dasher) Start(p fixed.Point26_6) {
-	fmt.Printf("\n%v\n", p)
+	// fmt.Printf("\n%v\n", p)
 	d.P0 = p
 	d.carry = 0
 	d.on = false
 }
 func (d *Dasher) Add1(p1 fixed.Point26_6) {
-	fmt.Printf("%v\n", p1)
+	// fmt.Printf("%v\n", p1)
 	vec01 := p1.Sub(d.P0)
 	len01 := pLen(vec01)
-	p0, carry := d.P0, d.carry
+	carry := d.carry
 	// Note: i is just an integer counter, but pre-cast to 26.6 for ease of use in multiplication
 	i := fixed.Int26_6(1)
 	for ; ; i++ {
@@ -90,8 +90,8 @@ func (d *Dasher) Add1(p1 fixed.Point26_6) {
 		numerator := int64(i)*int64(d.Length) - int64(carry)
 		denominator := int64(len01)
 		p1 := fixed.Point26_6{
-			X: p0.X + scale(vec01.X, numerator, denominator),
-			Y: p0.Y + scale(vec01.Y, numerator, denominator),
+			X: d.P0.X + scale(vec01.X, numerator, denominator),
+			Y: d.P0.Y + scale(vec01.Y, numerator, denominator),
 		}
 		if d.on {
 			d.A.Add1(p1)
@@ -99,12 +99,13 @@ func (d *Dasher) Add1(p1 fixed.Point26_6) {
 			d.A.Start(p1)
 		}
 		d.on = !d.on
-		p0, carry = p1, 0
+		carry = 0
 	}
-	// draw p0->p1 if required
+	// draw final dash fragment to p1 if required
 	if d.on {
 		d.A.Add1(p1)
 	}
+	d.P0 = p1
 }
 
 func scale(x fixed.Int26_6, numerator, denominator int64) fixed.Int26_6 {
