@@ -78,10 +78,8 @@ func (d *Dasher) Add1(p1 fixed.Point26_6) {
 	vec01 := p1.Sub(d.P0)
 	len01 := pLen(vec01)
 	carry := d.carry
-	// Note: i is just an integer counter, but pre-cast to 26.6 for ease of use in multiplication
-	i := fixed.Int26_6(1)
-	for ; ; i++ {
-		advance := i*d.Length - carry
+	for i := 1; ; i++ {
+		advance := fixed.Int26_6(i)*d.Length - carry
 		if advance > len01 { // FIXME(akavel): > or >= ?
 			d.carry = len01 - (advance - d.Length)
 			break
