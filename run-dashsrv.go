@@ -29,7 +29,12 @@ func serveImg(wr http.ResponseWriter, _ *http.Request) {
 	wr.Header().Set("content-type", "image/png")
 	w, h := 101, 101
 	path := raster.Path{}
-	p := DeBezierizer{Line: Liner(&path)}
+	dasher := Dasher{
+		Length: fixed.I(5),
+		A:      &path,
+	}
+	p := DeBezierizer{Line: Liner(&dasher)}
+	// p := DeBezierizer{Line: Liner(&path)}
 	// p := &path // reference implementation
 	p.Start(fixed.P(1, 1))
 	p.Add1(fixed.P(100, 10))
@@ -48,7 +53,65 @@ func serveImg(wr http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func Liner(a raster.Adder) func(p0, p1 fixed.Point26_6) {
+type Add1er interface {
+	Start(p fixed.Point26_6)
+	Add1(p fixed.Point26_6)
+}
+
+type Dasher struct {
+	Length fixed.Int26_6 // Length of a dash segment
+	P0     fixed.Point26_6
+	A      Add1er
+
+	carry fixed.Int26_6
+	on    bool // on/off - currently drawing the dash/hole
+}
+
+func (d *Dasher) Start(p fixed.Point26_6) {
+	fmt.Printf("\n%v\n", p)
+	d.P0 = p
+	d.carry = 0
+	d.on = false
+}
+func (d *Dasher) Add1(p1 fixed.Point26_6) {
+	fmt.Printf("%v\n", p1)
+	vec01 := p1.Sub(d.P0)
+	len01 := pLen(vec01)
+	p0, carry := d.P0, d.carry
+	// Note: i is just an integer counter, but pre-cast to 26.6 for ease of use in multiplication
+	i := fixed.Int26_6(1)
+	for ; ; i++ {
+		advance := i*d.Length - carry
+		if advance > len01 { // FIXME(akavel): > or >= ?
+			d.carry = len01 - (advance - d.Length)
+			break
+		}
+
+		numerator := int64(i)*int64(d.Length) - int64(carry)
+		denominator := int64(len01)
+		p1 := fixed.Point26_6{
+			X: p0.X + scale(vec01.X, numerator, denominator),
+			Y: p0.Y + scale(vec01.Y, numerator, denominator),
+		}
+		if d.on {
+			d.A.Add1(p1)
+		} else {
+			d.A.Start(p1)
+		}
+		d.on = !d.on
+		p0, carry = p1, 0
+	}
+	// draw p0->p1 if required
+	if d.on {
+		d.A.Add1(p1)
+	}
+}
+
+func scale(x fixed.Int26_6, numerator, denominator int64) fixed.Int26_6 {
+	return fixed.Int26_6((int64(x) * numerator) / denominator)
+}
+
+func Liner(a Add1er) func(p0, p1 fixed.Point26_6) {
 	started := false
 	start := fixed.Point26_6{}
 	return func(p0, p1 fixed.Point26_6) {
