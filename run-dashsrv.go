@@ -42,7 +42,7 @@ func serveImg(wr http.ResponseWriter, _ *http.Request) {
 	// p.Start(fixed.P(25, 100))
 	p.Add2(fixed.P(13, 0), fixed.P(1, 100))
 	r := raster.NewRasterizer(w, h)
-	raster.Stroke(r, path, 2<<6, nil, nil)
+	raster.Stroke(r, path, 2<<6, raster.ButtCapper, nil)
 	img := image.NewRGBA(image.Rect(0, 0, w, h))
 	painter := raster.NewRGBAPainter(img)
 	painter.SetColor(color.NRGBA{0, 0, 255, 255})
