@@ -99,7 +99,6 @@ func (d *Dasher) Add1(p1 fixed.Point26_6) {
 			d.A.Start(p1)
 		}
 		d.on = !d.on
-		carry = 0
 	}
 	// draw final dash fragment to p1 if required
 	if d.on {
