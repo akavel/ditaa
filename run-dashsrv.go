@@ -34,6 +34,7 @@ func serveImg(wr http.ResponseWriter, _ *http.Request) {
 	p.Start(fixed.P(1, 1))
 	p.Add1(fixed.P(100, 10))
 	p.Add2(fixed.P(100, 50), fixed.P(25, 100))
+	// p.Start(fixed.P(25, 100))
 	p.Add2(fixed.P(13, 0), fixed.P(1, 100))
 	r := raster.NewRasterizer(w, h)
 	raster.Stroke(r, path, 2<<6, nil, nil)
@@ -65,16 +66,26 @@ type DeBezierizer struct {
 	Line func(p0, p1 fixed.Point26_6)
 }
 
+// var depth = 0
+
 func (d *DeBezierizer) Start(p0 fixed.Point26_6) { d.P0 = p0 }
 func (d *DeBezierizer) Add1(p1 fixed.Point26_6)  { d.Line(d.P0, p1); d.P0 = p1 }
 func (d *DeBezierizer) Add2(p1, p2 fixed.Point26_6) {
+	// ind := strings.Repeat(" ", depth)
+	// fmt.Printf("%sAdd2(%v, %v, %v)\n", ind, d.P0, p1, p2)
 	if !curvy(d.P0, p1, p2) {
+		// fmt.Printf("%s Add1(%v, %v)\n", ind, d.P0, p2)
 		d.Add1(p2)
 		return
 	}
 	ps := split(d.P0, p1, p2)
+	// depth++
 	d.Add2(ps[1], ps[2])
 	d.Add2(ps[3], ps[4])
+	// depth--
+	// if depth == 0 {
+	// 	fmt.Println()
+	// }
 }
 
 func curvy(p0, p1, p2 fixed.Point26_6) bool {
@@ -91,6 +102,7 @@ func curvy(p0, p1, p2 fixed.Point26_6) bool {
 	n12 := pNorm(vec12, 1<<6)
 	dot := pDot(n01, n12)
 	const minDot = fixed.Int52_12((1 << 12) / 8)
+	// fmt.Printf("%s dot=%v\n", strings.Repeat(" ", depth), dot)
 	if dot < minDot {
 		return false
 	}
