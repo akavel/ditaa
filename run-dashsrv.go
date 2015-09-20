@@ -101,8 +101,11 @@ func curvy(p0, p1, p2 fixed.Point26_6) bool {
 	n01 := pNorm(vec01, 1<<6)
 	n12 := pNorm(vec12, 1<<6)
 	dot := pDot(n01, n12)
-	const minDot = fixed.Int52_12((1 << 12) / 8)
+	if dot < 0 {
+		dot = -dot
+	}
 	// fmt.Printf("%s dot=%v\n", strings.Repeat(" ", depth), dot)
+	const minDot = fixed.Int52_12((1 << 12) / 32)
 	if dot < minDot {
 		return false
 	}
