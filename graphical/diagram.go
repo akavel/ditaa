@@ -164,15 +164,19 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 	}
 	sort.Sort(BottomFirst(storageShapes))
 	for _, shape := range storageShapes {
-		fillPath := shape.MakeIntoRenderPath(diagram.Grid, false /*, opt*/)
-		//TODO: handle dashed
-		color := WHITE
-		if shape.FillColor != nil {
-			color = *shape.FillColor
-		}
-		Fill(img, fillPath, color.RGBA())
 		strokePath := shape.MakeIntoRenderPath(diagram.Grid, true /*, opt*/)
-		Stroke(img, strokePath, shape.StrokeColor.RGBA())
+		if shape.Dashed {
+			Dash(img, strokePath, shape.StrokeColor.RGBA())
+		} else {
+			fillPath := shape.MakeIntoRenderPath(diagram.Grid, false /*, opt*/)
+			//TODO: handle dashed
+			color := WHITE
+			if shape.FillColor != nil {
+				color = *shape.FillColor
+			}
+			Fill(img, fillPath, color.RGBA())
+			Stroke(img, strokePath, shape.StrokeColor.RGBA())
+		}
 	}
 
 	sort.Sort(LargeFirst(diagram.Shapes))

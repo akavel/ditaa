@@ -7,6 +7,7 @@ import (
 
 	"golang.org/x/image/math/fixed"
 
+	"github.com/akavel/ditaa/graphical/dasher"
 	"github.com/golang/freetype/raster"
 )
 
@@ -66,6 +67,35 @@ func Stroke(img *image.RGBA, path raster.Path, color color.RGBA) {
 	painter := raster.NewRGBAPainter(img)
 	painter.SetColor(color)
 	g.Rasterize(painter)
+}
+
+func Dash(img *image.RGBA, path raster.Path, color color.RGBA) {
+	p := func(x, y fixed.Int26_6) fixed.Point26_6 {
+		return fixed.Point26_6{x, y}
+	}
+	dashed := raster.Path{}
+	dasher := dasher.DeBezierizer{A: &dasher.Dasher{
+		Length: fixed.I(5), // FIXME(akavel): make this configurable, or auto-detect
+		A:      &dashed,
+	}}
+	for len(path) > 0 {
+		switch path[0] {
+		case 0:
+			dasher.Start(p(path[1], path[2]))
+			path = path[4:]
+		case 1:
+			dasher.Add1(p(path[1], path[2]))
+			path = path[4:]
+		case 2:
+			dasher.Add2(p(path[1], path[2]), p(path[3], path[4]))
+			path = path[6:]
+		case 3:
+			panic("Dash: cubic paths not implemented")
+		default:
+			panic("Dash: unknown code of path segment")
+		}
+	}
+	Stroke(img, dashed, color)
 }
 
 func Fill(img *image.RGBA, path raster.Path, color color.RGBA) {
