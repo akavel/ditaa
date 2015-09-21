@@ -169,7 +169,6 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 			Dash(img, strokePath, shape.StrokeColor.RGBA())
 		} else {
 			fillPath := shape.MakeIntoRenderPath(diagram.Grid, false /*, opt*/)
-			//TODO: handle dashed
 			color := WHITE
 			if shape.FillColor != nil {
 				color = *shape.FillColor
@@ -212,7 +211,11 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 		strokePath := shape.MakeIntoRenderPath(diagram.Grid, true /*, opt*/)
 		if shape.Type != TYPE_ARROWHEAD {
 			//TODO: support dashed lines
-			Stroke(img, strokePath, shape.StrokeColor.RGBA())
+			if shape.Dashed {
+				Dash(img, strokePath, shape.StrokeColor.RGBA())
+			} else {
+				Stroke(img, strokePath, shape.StrokeColor.RGBA())
+			}
 		}
 	}
 

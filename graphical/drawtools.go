@@ -61,7 +61,6 @@ func ftofix(f float64) fixed.Int26_6 {
 }
 
 func Stroke(img *image.RGBA, path raster.Path, color color.RGBA) {
-	//TODO: support dashed lines
 	g := raster.NewRasterizer(img.Rect.Max.X+1, img.Rect.Max.Y+1) //TODO: +1 or not?
 	raster.Stroke(g, path, ftofix(STROKE_WIDTH), nil, nil)
 	painter := raster.NewRGBAPainter(img)
