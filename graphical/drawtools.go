@@ -61,8 +61,12 @@ func ftofix(f float64) fixed.Int26_6 {
 }
 
 func Stroke(img *image.RGBA, path raster.Path, color color.RGBA) {
+	stroke(img, path, color, nil)
+}
+
+func stroke(img *image.RGBA, path raster.Path, color color.RGBA, cr raster.Capper) {
 	g := raster.NewRasterizer(img.Rect.Max.X+1, img.Rect.Max.Y+1) //TODO: +1 or not?
-	raster.Stroke(g, path, ftofix(STROKE_WIDTH), nil, nil)
+	raster.Stroke(g, path, ftofix(STROKE_WIDTH), cr, nil)
 	painter := raster.NewRGBAPainter(img)
 	painter.SetColor(color)
 	g.Rasterize(painter)
@@ -94,7 +98,7 @@ func Dash(img *image.RGBA, path raster.Path, color color.RGBA) {
 			panic("Dash: unknown code of path segment")
 		}
 	}
-	Stroke(img, dashed, color)
+	stroke(img, dashed, color, raster.ButtCapper)
 }
 
 func Fill(img *image.RGBA, path raster.Path, color color.RGBA) {
