@@ -143,11 +143,7 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 	// drop shadows
 	if opt.DropShadows {
 		renderShadows(img, diagram.Shapes, diagram.Grid, opt)
-
-		//TODO: blur shadows
-		if true {
-			blurShadows(img)
-		}
+		blurShadows(img)
 	}
 
 	//render storage shapes
@@ -210,7 +206,6 @@ func RenderDiagram(img *image.RGBA, diagram *Diagram, opt Options, font *truetyp
 		// draw
 		strokePath := shape.MakeIntoRenderPath(diagram.Grid, true /*, opt*/)
 		if shape.Type != TYPE_ARROWHEAD {
-			//TODO: support dashed lines
 			if shape.Dashed {
 				Dash(img, strokePath, shape.StrokeColor.RGBA())
 			} else {

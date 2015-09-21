@@ -116,7 +116,7 @@ func NewDiagram(grid *TextGrid) *Diagram {
 				boundarySetsStep2 = append(boundarySetsStep2, makeScaledOneThirdEquivalent(boundaries))
 
 				copyGrid.Rows = NewAbstractionGrid(workGrid, cells).Rows
-				filled := copyGrid.fillContinuousArea(xi, yi, '*')
+				filled := copyGrid.fillContinuousArea(Cell{xi, yi}, '*')
 				FillCellsWith(fillBuffer.Rows, filled, '*')
 				FillCellsWith(fillBuffer.Rows, boundaries, '-')
 
@@ -570,7 +570,7 @@ func getFilledEquivalent(cells *CellSet, grid *TextGrid) *CellSet {
 		newcells.AddAll(cells)
 		return newcells
 	}
-	grid.fillContinuousArea(c.X, c.Y, '*')
+	grid.fillContinuousArea(c, '*')
 	return grid.GetAllNonBlank()
 }
 
@@ -705,7 +705,7 @@ func breakIntoDistinctBoundaries(cells *CellSet) []*CellSet {
 		if boundaryGrid.IsBlankXY(c.X, c.Y) {
 			continue
 		}
-		boundarySet := boundaryGrid.fillContinuousArea(c.X, c.Y, ' ')
+		boundarySet := boundaryGrid.fillContinuousArea(c, ' ')
 		result = append(result, boundarySet)
 	}
 	return result

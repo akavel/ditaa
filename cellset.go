@@ -167,7 +167,7 @@ func (s *CellSet) getTypeAccordingToFillMethod(grid *TextGrid) CellSetType {
 		fmt.Fprintln(os.Stderr, "Unexpected error: fill method cannot fill anywhere")
 		return SET_UNDETERMINED
 	}
-	temp.fillContinuousArea(fillCell.X, fillCell.Y, '*')
+	temp.fillContinuousArea(*fillCell, '*')
 	if temp.HasBlankCells() {
 		return SET_HAS_CLOSED_AREA
 	}

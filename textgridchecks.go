@@ -20,21 +20,21 @@ func (c Cell) String() string { return fmt.Sprintf("(%d, %d)", c.X, c.Y) }
 func isAlphNum(ch rune) bool             { return unicode.IsLetter(ch) || unicode.IsDigit(ch) }
 func isOneOf(ch rune, group string) bool { return strings.ContainsRune(group, ch) }
 
-func (t *TextGrid) IsBullet(x, y int) bool {
-	ch := t.Get(x, y)
+func (t *TextGrid) IsBullet(c Cell) bool {
+	ch := t.GetCell(c)
 	return (ch == 'o' || ch == '*') &&
-		t.IsBlankNon0(x+1, y) &&
-		t.IsBlankNon0(x-1, y) &&
-		isAlphNum(t.Get(x+2, y))
+		t.IsBlankNon0(c.East()) &&
+		t.IsBlankNon0(c.West()) &&
+		isAlphNum(t.GetCell(c.East().East()))
 }
 
 func (t *TextGrid) IsOutOfBounds(c Cell) bool {
 	return c.X >= t.Width() || c.Y >= t.Height() || c.X < 0 || c.Y < 0
 }
 
-func (t *TextGrid) IsBlankNon0(x, y int) bool { return t.Get(x, y) == ' ' }
+func (t *TextGrid) IsBlankNon0(c Cell) bool { return t.GetCell(c) == ' ' }
 func (t *TextGrid) IsBlank(c Cell) bool {
-	ch := t.Get(c.X, c.Y)
+	ch := t.GetCell(c)
 	if ch == 0 {
 		return false // FIXME: should this be false, or true (see 'isBlank(x,y)' in Java)
 	}

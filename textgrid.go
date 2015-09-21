@@ -180,12 +180,11 @@ func appendSpaces(row []rune, n int) []rune {
 }
 
 func (t *TextGrid) replaceBullets() {
-	for y, row := range t.Rows {
-		for x, _ := range row {
-			if t.IsBullet(x, y) {
-				t.Set(x, y, ' ')
-				t.Set(x+1, y, '\u2022')
-			}
+	for it := t.Iter(); it.Next(); {
+		c := it.Cell()
+		if t.IsBullet(c) {
+			t.SetCell(c, ' ')
+			t.SetCell(c.East(), '\u2022')
 		}
 	}
 }
@@ -232,12 +231,10 @@ func (t *TextGrid) SubGrid(x, y, w, h int) *TextGrid {
 
 func (t *TextGrid) GetAllNonBlank() *CellSet {
 	cells := NewCellSet()
-	for y := range t.Rows {
-		for x := range t.Rows[y] {
-			c := Cell{x, y}
-			if !t.IsBlank(c) {
-				cells.Add(c)
-			}
+	for it := t.Iter(); it.Next(); {
+		c := it.Cell()
+		if !t.IsBlank(c) {
+			cells.Add(c)
 		}
 	}
 	return cells
@@ -245,12 +242,10 @@ func (t *TextGrid) GetAllNonBlank() *CellSet {
 
 func (t *TextGrid) GetAllBlanksBetweenCharacters() *CellSet {
 	cells := NewCellSet()
-	for y := range t.Rows {
-		for x := range t.Rows[y] {
-			c := Cell{x, y}
-			if t.IsBlankBetweenCharacters(c) {
-				cells.Add(c)
-			}
+	for it := t.Iter(); it.Next(); {
+		c := it.Cell()
+		if t.IsBlankBetweenCharacters(c) {
+			cells.Add(c)
 		}
 	}
 	return cells
@@ -312,32 +307,8 @@ func (t *TextGrid) seedFillOld(seed Cell, newChar rune) *CellSet {
 	return filled
 }
 
-func (t *TextGrid) seedFill2(seed Cell, newChar rune) *CellSet {
-	filled := NewCellSet()
-	oldChar := t.GetCell(seed)
-	if t.IsOutOfBounds(seed) {
-		return filled
-	}
-
-	var expandDFS func(c Cell)
-	expandDFS = func(c Cell) {
-		if t.GetCell(c) != oldChar {
-			return
-		}
-		t.SetCell(c, newChar)
-		filled.Add(c)
-
-		expandDFS(c.North())
-		expandDFS(c.South())
-		expandDFS(c.East())
-		expandDFS(c.West())
-	}
-	expandDFS(seed)
-	return filled
-}
-
-func (t *TextGrid) fillContinuousArea(x, y int, ch rune) *CellSet {
-	return t.seedFillOld(Cell{x, y}, ch)
+func (t *TextGrid) fillContinuousArea(c Cell, ch rune) *CellSet {
+	return t.seedFillOld(c, ch)
 }
 
 // Makes blank all the cells that contain non-text elements.
