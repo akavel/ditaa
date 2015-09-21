@@ -17,14 +17,15 @@ type Dasher struct {
 	A      Add1er
 
 	carry fixed.Int26_6
-	on    bool // on/off - currently drawing the dash/hole
+	gap   bool // currently drawing the gap or dash
 }
 
 func (d *Dasher) Start(p fixed.Point26_6) {
 	// fmt.Printf("\n%v\n", p)
 	d.P0 = p
 	d.carry = 0
-	d.on = false
+	d.gap = false
+	d.A.Start(p)
 }
 func (d *Dasher) Add1(p1 fixed.Point26_6) {
 	// fmt.Printf("%v\n", p1)
@@ -44,15 +45,15 @@ func (d *Dasher) Add1(p1 fixed.Point26_6) {
 			X: d.P0.X + scale(vec01.X, numerator, denominator),
 			Y: d.P0.Y + scale(vec01.Y, numerator, denominator),
 		}
-		if d.on {
-			d.A.Add1(p1)
-		} else {
+		if d.gap {
 			d.A.Start(p1)
+		} else {
+			d.A.Add1(p1)
 		}
-		d.on = !d.on
+		d.gap = !d.gap
 	}
 	// draw final dash fragment to p1 if required
-	if d.on {
+	if !d.gap {
 		d.A.Add1(p1)
 	}
 	d.P0 = p1
