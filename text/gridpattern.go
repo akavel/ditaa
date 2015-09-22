@@ -60,6 +60,9 @@ the end of its lines. For example:
 	etc.
 
 */
+type Criteria []gridPattern
+type gridPattern [3]*regexp.Regexp
+
 var gridPatternChars = map[byte]string{
 	'[':  "[^|:]",
 	'|':  "[|:]",
@@ -97,11 +100,8 @@ var gridPatternCharsInv = map[byte]string{
 	'8': "[^-=+\\/\\\\]",
 }
 
-type GridPattern [3]*regexp.Regexp
-type Criteria []GridPattern
-
 func NewCriterion(rowtop, rowmid, rowbot string) Criteria {
-	return Criteria{NewGridPattern(rowtop, rowmid, rowbot)}
+	return Criteria{newGridPattern(rowtop, rowmid, rowbot)}
 }
 func NewCriteria(criteria ...Criteria) Criteria {
 	c := Criteria{}
@@ -112,15 +112,15 @@ func NewCriteria(criteria ...Criteria) Criteria {
 }
 func (c Criteria) AnyMatch(g *Grid) bool {
 	for _, p := range c {
-		if p.Match(g) {
+		if p.match(g) {
 			return true
 		}
 	}
 	return false
 }
 
-func NewGridPattern(rowtop, rowmid, rowbot string) GridPattern {
-	return GridPattern{
+func newGridPattern(rowtop, rowmid, rowbot string) gridPattern {
+	return gridPattern{
 		mustCompileRow(rowtop),
 		mustCompileRow(rowmid),
 		mustCompileRow(rowbot),
@@ -147,7 +147,7 @@ func mustCompileRow(pattern string) *regexp.Regexp {
 	}
 	return regexp.MustCompile(re)
 }
-func (p *GridPattern) Match(t *Grid) bool {
+func (p *gridPattern) match(t *Grid) bool {
 	for i, re := range *p {
 		if !re.MatchString(string(t.Rows[i])) {
 			return false
@@ -158,9 +158,9 @@ func (p *GridPattern) Match(t *Grid) bool {
 
 var (
 	crossCriteria    = NewCriterion(".6.", "4+8", ".2.")
-	KCriteria        = NewCriterion(".6.", "%4+8", ".2.")
+	_KCriteria       = NewCriterion(".6.", "%4+8", ".2.")
 	inverseKCriteria = NewCriterion(".6.", "4+%8", ".2.")
-	TCriteria        = NewCriterion(".%6.", "4+8", ".2.")
+	_TCriteria       = NewCriterion(".%6.", "4+8", ".2.")
 	inverseTCriteria = NewCriterion(".6.", "4+8", ".%2.")
 
 	// ****** normal corners *******
@@ -214,7 +214,7 @@ var (
 		NewCriterion("%1%6.", "%4\\%8", ".%2%5"))
 
 	// groups
-	intersectionCriteria = NewCriteria(crossCriteria, KCriteria, TCriteria, inverseKCriteria, inverseTCriteria)
+	intersectionCriteria = NewCriteria(crossCriteria, _KCriteria, _TCriteria, inverseKCriteria, inverseTCriteria)
 	normalCornerCriteria = NewCriteria(normalCorner1Criteria, normalCorner2Criteria, normalCorner3Criteria, normalCorner4Criteria)
 	roundCornerCriteria  = NewCriteria(roundCorner1Criteria, roundCorner2Criteria, roundCorner3Criteria, roundCorner4Criteria)
 	corner1Criteria      = NewCriteria(normalCorner1Criteria, roundCorner1Criteria)

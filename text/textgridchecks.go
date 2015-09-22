@@ -81,8 +81,8 @@ func (t *Grid) IsLoneDiagonal(c Cell) bool {
 	return loneDiagonalCriteria.AnyMatch(t.TestingSubGrid(c))
 }
 func (t *Grid) IsCross(c Cell) bool      { return crossCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *Grid) IsT(c Cell) bool          { return TCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *Grid) IsK(c Cell) bool          { return KCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsT(c Cell) bool          { return _TCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsK(c Cell) bool          { return _KCriteria.AnyMatch(t.TestingSubGrid(c)) }
 func (t *Grid) IsInverseT(c Cell) bool   { return inverseTCriteria.AnyMatch(t.TestingSubGrid(c)) }
 func (t *Grid) IsInverseK(c Cell) bool   { return inverseKCriteria.AnyMatch(t.TestingSubGrid(c)) }
 func (t *Grid) IsCorner1(c Cell) bool    { return corner1Criteria.AnyMatch(t.TestingSubGrid(c)) }
