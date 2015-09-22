@@ -1,4 +1,4 @@
-package main
+package text
 
 type AbstractionGrid struct {
 	Rows [][]rune
@@ -8,7 +8,7 @@ func EmptyAbstractionGrid(w, h int) *AbstractionGrid {
 	return &AbstractionGrid{Rows: BlankRows(3*w, 3*h)}
 }
 
-func NewAbstractionGrid(t *TextGrid, cells *CellSet) *AbstractionGrid {
+func NewAbstractionGrid(t *Grid, cells *CellSet) *AbstractionGrid {
 	g := EmptyAbstractionGrid(3*t.Width(), 3*t.Height())
 	for c := range cells.Set {
 		if t.IsBlank(c) {
@@ -24,7 +24,7 @@ func NewAbstractionGrid(t *TextGrid, cells *CellSet) *AbstractionGrid {
 	return g
 }
 
-func (g *AbstractionGrid) Set(c Cell, brush AbstractCell) {
+func (g *AbstractionGrid) Set(c Cell, brush abstractCell) {
 	x, y := 3*c.X, 3*c.Y
 	for dy := 0; dy < 3; dy++ {
 		for dx := 0; dx < 3; dx++ {
@@ -45,8 +45,8 @@ func (g *AbstractionGrid) Width() int {
 	return len(g.Rows[0]) / 3
 }
 
-func (g *AbstractionGrid) GetAsTextGrid() *TextGrid {
-	t := NewTextGrid(g.Width(), g.Height())
+func (g *AbstractionGrid) GetAsTextGrid() *Grid {
+	t := NewGrid(g.Width(), g.Height())
 	for y := range g.Rows {
 		for x, ch := range g.Rows[y] {
 			if ch != ' ' {
@@ -58,20 +58,20 @@ func (g *AbstractionGrid) GetAsTextGrid() *TextGrid {
 }
 
 var abstractionChecks = []struct {
-	check  func(*TextGrid, Cell) bool
-	result AbstractCell
+	check  func(*Grid, Cell) bool
+	result abstractCell
 }{
-	{(*TextGrid).IsCross, abCross},
-	{(*TextGrid).IsT, abT},
-	{(*TextGrid).IsK, abK},
-	{(*TextGrid).IsInverseT, abInvT},
-	{(*TextGrid).IsInverseK, abInvK},
-	{(*TextGrid).IsCorner1, abCorner1},
-	{(*TextGrid).IsCorner2, abCorner2},
-	{(*TextGrid).IsCorner3, abCorner3},
-	{(*TextGrid).IsCorner4, abCorner4},
-	{(*TextGrid).IsHorizontalLine, abHLine},
-	{(*TextGrid).IsVerticalLine, abVLine},
-	{(*TextGrid).IsCrossOnLine, abCross},
-	{(*TextGrid).IsStarOnLine, abStar},
+	{(*Grid).IsCross, abCross},
+	{(*Grid).IsT, abT},
+	{(*Grid).IsK, abK},
+	{(*Grid).IsInverseT, abInvT},
+	{(*Grid).IsInverseK, abInvK},
+	{(*Grid).IsCorner1, abCorner1},
+	{(*Grid).IsCorner2, abCorner2},
+	{(*Grid).IsCorner3, abCorner3},
+	{(*Grid).IsCorner4, abCorner4},
+	{(*Grid).IsHorizontalLine, abHLine},
+	{(*Grid).IsVerticalLine, abVLine},
+	{(*Grid).IsCrossOnLine, abCross},
+	{(*Grid).IsStarOnLine, abStar},
 }

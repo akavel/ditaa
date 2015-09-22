@@ -1,4 +1,4 @@
-package main
+package text
 
 import (
 	"bytes"
@@ -33,19 +33,19 @@ var markupTags = map[string]struct{}{
 
 var _SPACE = []byte{' '}
 
-type TextGrid struct {
+type Grid struct {
 	Rows [][]rune
 }
 
-func NewTextGrid(w, h int) *TextGrid {
+func NewGrid(w, h int) *Grid {
 	if h == 0 {
-		return &TextGrid{}
+		return &Grid{}
 	}
-	return &TextGrid{Rows: BlankRows(w, h)}
+	return &Grid{Rows: BlankRows(w, h)}
 }
 
-func CopyTextGrid(other *TextGrid) *TextGrid {
-	t := TextGrid{}
+func CopyGrid(other *Grid) *Grid {
+	t := Grid{}
 	t.Rows = make([][]rune, len(other.Rows))
 	for y, row := range other.Rows {
 		t.Rows[y] = append([]rune(nil), row...)
@@ -53,7 +53,7 @@ func CopyTextGrid(other *TextGrid) *TextGrid {
 	return &t
 }
 
-func (t TextGrid) Iter() CellIter {
+func (t Grid) Iter() CellIter {
 	return CellIter{t.Rows, -1, 0}
 }
 
@@ -75,7 +75,7 @@ func (it *CellIter) Next() bool {
 }
 func (it CellIter) Cell() Cell { return Cell{it.x, it.y} }
 
-func (t1 TextGrid) Equals(t2 TextGrid) bool {
+func (t1 Grid) Equals(t2 Grid) bool {
 	if len(t1.Rows) != len(t2.Rows) {
 		return false
 	}
@@ -101,34 +101,34 @@ func onlyWhitespaces(rs []rune) bool {
 	return true
 }
 
-func (t *TextGrid) Set(c Cell, ch rune) { t.Rows[c.Y][c.X] = ch }
-func (t *TextGrid) Get(c Cell) rune {
+func (t *Grid) Set(c Cell, ch rune) { t.Rows[c.Y][c.X] = ch }
+func (t *Grid) Get(c Cell) rune {
 	if c.X >= t.Width() || c.Y >= t.Height() || c.X < 0 || c.Y < 0 {
 		return 0
 	}
 	return t.Rows[c.Y][c.X]
 }
 
-func (t *TextGrid) Height() int { return len(t.Rows) }
-func (t *TextGrid) Width() int {
+func (t *Grid) Height() int { return len(t.Rows) }
+func (t *Grid) Width() int {
 	if len(t.Rows) == 0 {
 		return 0
 	}
 	return len(t.Rows[0])
 }
 
-func (t *TextGrid) TestingSubGrid(c Cell) *TextGrid {
+func (t *Grid) TestingSubGrid(c Cell) *Grid {
 	return t.SubGrid(c.X-1, c.Y-1, 3, 3)
 }
-func (t *TextGrid) SubGrid(x, y, w, h int) *TextGrid {
-	g := NewTextGrid(0, 0)
+func (t *Grid) SubGrid(x, y, w, h int) *Grid {
+	g := NewGrid(0, 0)
 	for i := 0; i < h; i++ {
 		g.Rows = append(g.Rows, t.Rows[y+i][x:x+w])
 	}
 	return g
 }
 
-func (t *TextGrid) GetAllNonBlank() *CellSet {
+func (t *Grid) GetAllNonBlank() *CellSet {
 	cells := NewCellSet()
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
@@ -139,7 +139,7 @@ func (t *TextGrid) GetAllNonBlank() *CellSet {
 	return cells
 }
 
-func (t *TextGrid) GetAllBlanksBetweenCharacters() *CellSet {
+func (t *Grid) GetAllBlanksBetweenCharacters() *CellSet {
 	cells := NewCellSet()
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
@@ -173,7 +173,7 @@ func FillCellsWith(rows [][]rune, cells *CellSet, ch rune) {
 	}
 }
 
-func (t *TextGrid) seedFillOld(seed Cell, newChar rune) *CellSet {
+func (t *Grid) seedFillOld(seed Cell, newChar rune) *CellSet {
 	filled := NewCellSet()
 	oldChar := t.Get(seed)
 	if oldChar == newChar {
@@ -206,12 +206,12 @@ func (t *TextGrid) seedFillOld(seed Cell, newChar rune) *CellSet {
 	return filled
 }
 
-func (t *TextGrid) fillContinuousArea(c Cell, ch rune) *CellSet {
+func (t *Grid) FillContinuousArea(c Cell, ch rune) *CellSet {
 	return t.seedFillOld(c, ch)
 }
 
 // Makes blank all the cells that contain non-text elements.
-func (t *TextGrid) RemoveNonText() {
+func (t *Grid) RemoveNonText() {
 	//the following order is significant
 	//since the south-pointing arrowheads
 	//are determined based on the surrounding boundaries
@@ -247,7 +247,7 @@ func (t *TextGrid) RemoveNonText() {
 	}
 
 	// remove markup tags
-	for _, pair := range t.findMarkupTags() {
+	for _, pair := range t.FindMarkupTags() {
 		tag := pair.Tag
 		if tag == "" {
 			continue
@@ -257,14 +257,14 @@ func (t *TextGrid) RemoveNonText() {
 	}
 }
 
-func (t *TextGrid) WriteStringTo(c Cell, s string) {
+func (t *Grid) WriteStringTo(c Cell, s string) {
 	if t.IsOutOfBounds(c) {
 		return
 	}
 	copy(t.Rows[c.Y][c.X:], []rune(s))
 }
 
-func (t *TextGrid) GetStringAt(c Cell, length int) string {
+func (t *Grid) GetStringAt(c Cell, length int) string {
 	if t.IsOutOfBounds(c) {
 		return ""
 	}
@@ -278,7 +278,7 @@ type CellTagPair struct {
 	Tag string
 }
 
-func (t *TextGrid) findMarkupTags() []CellTagPair {
+func (t *Grid) FindMarkupTags() []CellTagPair {
 	result := []CellTagPair{}
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
@@ -318,7 +318,7 @@ func unhex(c byte) uint8 {
 	return 10 + c - 'A'
 }
 
-func (t *TextGrid) FindColorCodes() []CellColorPair {
+func (t *Grid) FindColorCodes() []CellColorPair {
 	result := []CellColorPair{}
 	w, h := t.Width(), t.Height()
 	for yi := 0; yi < h; yi++ {
@@ -342,13 +342,13 @@ func (t *TextGrid) FindColorCodes() []CellColorPair {
 	return result
 }
 
-func CopySelectedCells(dst *TextGrid, cells *CellSet, src *TextGrid) {
+func CopySelectedCells(dst *Grid, cells *CellSet, src *Grid) {
 	for c := range cells.Set {
 		dst.Set(c, src.Get(c))
 	}
 }
 
-func (t *TextGrid) DEBUG() string {
+func (t *Grid) DEBUG() string {
 	var buf bytes.Buffer
 	buf.WriteString("    " + strings.Repeat("0123456789", t.Width()/10+1) + "\n")
 	for i, row := range t.Rows {
@@ -360,7 +360,7 @@ func (t *TextGrid) DEBUG() string {
 // ReplaceTypeOnLine replaces letters or numbers that are on horizontal
 // or vertical lines, with the appropriate character that will make the
 // line continuous (| for vertical and - for horizontal lines)
-func (t *TextGrid) ReplaceTypeOnLine() {
+func (t *Grid) ReplaceTypeOnLine() {
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
 		ch := t.Get(c)
@@ -380,7 +380,7 @@ func (t *TextGrid) ReplaceTypeOnLine() {
 	}
 }
 
-func (t *TextGrid) ReplacePointMarkersOnLine() {
+func (t *Grid) ReplacePointMarkersOnLine() {
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
 		ch := t.Get(c)
@@ -400,7 +400,7 @@ func (t *TextGrid) ReplacePointMarkersOnLine() {
 	}
 }
 
-func (t *TextGrid) GetPointMarkersOnLine() []Cell {
+func (t *Grid) GetPointMarkersOnLine() []Cell {
 	result := []Cell{}
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
@@ -412,7 +412,7 @@ func (t *TextGrid) GetPointMarkersOnLine() []Cell {
 	return result
 }
 
-func (t *TextGrid) FindArrowheads() []Cell {
+func (t *Grid) FindArrowheads() []Cell {
 	result := []Cell{}
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
@@ -428,7 +428,7 @@ type CellStringPair struct {
 	S string
 }
 
-func (t *TextGrid) FindStrings() []CellStringPair {
+func (t *Grid) FindStrings() []CellStringPair {
 	result := []CellStringPair{}
 	for y := range t.Rows {
 		for x := 0; x < len(t.Rows[y]); x++ {
@@ -455,7 +455,7 @@ func (t *TextGrid) FindStrings() []CellStringPair {
 	return result
 }
 
-func (t *TextGrid) OtherStringsStartInTheSameColumn(c Cell) int {
+func (t *Grid) OtherStringsStartInTheSameColumn(c Cell) int {
 	if !t.IsStringsStart(c) {
 		return 0
 	}
@@ -469,11 +469,11 @@ func (t *TextGrid) OtherStringsStartInTheSameColumn(c Cell) int {
 	return result
 }
 
-func (t *TextGrid) IsStringsStart(c Cell) bool {
+func (t *Grid) IsStringsStart(c Cell) bool {
 	return !t.IsBlank(c) && t.IsBlank(c.West())
 }
 
-func (t *TextGrid) OtherStringsEndInTheSameColumn(c Cell) int {
+func (t *Grid) OtherStringsEndInTheSameColumn(c Cell) int {
 	if !t.IsStringsEnd(c) {
 		return 0
 	}
@@ -487,6 +487,6 @@ func (t *TextGrid) OtherStringsEndInTheSameColumn(c Cell) int {
 	return result
 }
 
-func (t *TextGrid) IsStringsEnd(c Cell) bool {
+func (t *Grid) IsStringsEnd(c Cell) bool {
 	return !t.IsBlank(c) && t.IsBlank(c.East())
 }

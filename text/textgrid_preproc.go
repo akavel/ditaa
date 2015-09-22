@@ -1,4 +1,4 @@
-package main
+package text
 
 import (
 	"bufio"
@@ -6,7 +6,11 @@ import (
 	"strings"
 )
 
-func (t *TextGrid) LoadFrom(r io.Reader) error {
+const (
+	DEFAULT_TAB_SIZE = 8
+)
+
+func (t *Grid) LoadFrom(r io.Reader) error {
 	lines, err := preSplit(r)
 	if err != nil {
 		return err
@@ -18,6 +22,7 @@ func (t *TextGrid) LoadFrom(r io.Reader) error {
 	// add blank outline around the buffer to prevent fill glitch
 	lines = preAddOutline(lines)
 	t.Rows = lines
+	// TODO(akavel): two calls below maybe belong in a different func
 	t.replaceBullets()
 	t.replaceHumanColorCodes()
 
@@ -81,7 +86,7 @@ func preAddOutline(rows [][]rune) [][]rune {
 	}
 	return newrows
 }
-func (t *TextGrid) replaceBullets() {
+func (t *Grid) replaceBullets() {
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
 		if t.IsBullet(c) {
@@ -90,7 +95,7 @@ func (t *TextGrid) replaceBullets() {
 		}
 	}
 }
-func (t *TextGrid) replaceHumanColorCodes() {
+func (t *Grid) replaceHumanColorCodes() {
 	for y, row := range t.Rows {
 		s := string(row)
 		for k, v := range humanColorCodes {

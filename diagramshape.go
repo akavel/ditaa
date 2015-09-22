@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/akavel/ditaa/graphical"
+	"github.com/akavel/ditaa/text"
 )
 
-func NewSmallLine(grid *TextGrid, c Cell, gg graphical.Grid) *graphical.Shape {
+func NewSmallLine(grid *text.Grid, c text.Cell, gg graphical.Grid) *graphical.Shape {
 	cc := graphical.Cell(c)
 	switch {
 	case grid.IsHorizontalLine(c):
@@ -23,7 +24,7 @@ func NewSmallLine(grid *TextGrid, c Cell, gg graphical.Grid) *graphical.Shape {
 	return nil
 }
 
-func ConnectEndsToAnchors(s *graphical.Shape, grid *TextGrid, gg graphical.Grid) {
+func ConnectEndsToAnchors(s *graphical.Shape, grid *text.Grid, gg graphical.Grid) {
 	if s.Closed {
 		return
 	}
@@ -45,7 +46,7 @@ func ConnectEndsToAnchors(s *graphical.Shape, grid *TextGrid, gg graphical.Grid)
 			x, y = line.end.X-float64(gg.CellW), line.end.Y
 		}
 		anchor := gg.CellFor(graphical.Point{X: x, Y: y})
-		c := Cell(anchor)
+		c := text.Cell(anchor)
 		if grid.IsArrowhead(c) || grid.IsCorner(c) || grid.IsIntersection(c) {
 			line.end.X, line.end.Y = gg.CellMidX(anchor), gg.CellMidY(anchor)
 			line.end.Locked = true
@@ -53,8 +54,8 @@ func ConnectEndsToAnchors(s *graphical.Shape, grid *TextGrid, gg graphical.Grid)
 	}
 }
 
-func createOpenFromBoundaryCells(grid *TextGrid, cells *CellSet, gg graphical.Grid, allCornersRound bool) []graphical.Shape {
-	if cells.Type(grid) != SET_OPEN {
+func createOpenFromBoundaryCells(grid *text.Grid, cells *text.CellSet, gg graphical.Grid, allCornersRound bool) []graphical.Shape {
+	if cells.Type(grid) != text.SET_OPEN {
 		panic("CellSet is closed and cannot be handled by this method")
 	}
 	if len(cells.Set) == 0 {
@@ -62,15 +63,15 @@ func createOpenFromBoundaryCells(grid *TextGrid, cells *CellSet, gg graphical.Gr
 	}
 
 	shapes := []graphical.Shape{}
-	workGrid := NewTextGrid(grid.Width(), grid.Height())
-	CopySelectedCells(workGrid, cells, grid)
+	workGrid := text.NewGrid(grid.Width(), grid.Height())
+	text.CopySelectedCells(workGrid, cells, grid)
 
 	// if DEBUG {
 	// 	fmt.Println("Making composite shape from grid:")
 	// 	workGrid.printDebug()
 	// }
 
-	visited := NewCellSet()
+	visited := text.NewCellSet()
 	for c := range cells.Set {
 		// fmt.Println("cell", c)
 		if workGrid.IsLinesEnd(c) {
@@ -104,7 +105,7 @@ func createOpenFromBoundaryCells(grid *TextGrid, cells *CellSet, gg graphical.Gr
 // 	return line
 // }
 
-func growEdgesFromCell(grid *TextGrid, gg graphical.Grid, allCornersRound bool, c, prev Cell, visited *CellSet) []graphical.Shape {
+func growEdgesFromCell(grid *text.Grid, gg graphical.Grid, allCornersRound bool, c, prev text.Cell, visited *text.CellSet) []graphical.Shape {
 	result := []graphical.Shape{}
 	visited.Add(prev)
 	shape := graphical.NewShape(makePointForCell(prev, grid, gg, allCornersRound))
@@ -142,7 +143,7 @@ func growEdgesFromCell(grid *TextGrid, gg graphical.Grid, allCornersRound bool, 
 	return result
 }
 
-func makePointForCell(c Cell, grid *TextGrid, gg graphical.Grid, allCornersRound bool) graphical.Point {
+func makePointForCell(c text.Cell, grid *text.Grid, gg graphical.Grid, allCornersRound bool) graphical.Point {
 	var typ graphical.PointType
 	switch {
 	case grid.IsCorner(c) && allCornersRound:
@@ -163,7 +164,7 @@ func makePointForCell(c Cell, grid *TextGrid, gg graphical.Grid, allCornersRound
 	}
 }
 
-func createArrowhead(grid *TextGrid, c Cell, gg graphical.Grid) *graphical.Shape {
+func createArrowhead(grid *text.Grid, c text.Cell, gg graphical.Grid) *graphical.Shape {
 	if !grid.IsArrowhead(c) {
 		return nil
 	}

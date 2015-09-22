@@ -10,6 +10,7 @@ import (
 	"github.com/akavel/ditaa/embd"
 	"github.com/akavel/ditaa/fontmeasure"
 	"github.com/akavel/ditaa/graphical"
+	"github.com/akavel/ditaa/text"
 )
 
 var baseFont = func() *truetype.Font {
@@ -25,7 +26,7 @@ type Diagram struct {
 }
 
 /*
-An outline of the inner wor210kings of this very important (and monstrous)
+An outline of the inner workings of this very important (and monstrous)
 constructor is presented here. Boundary processing is the first step
 of the process:
 
@@ -70,9 +71,9 @@ proceed with using those boundaries to create the shapes:
 Finally, the text processing occurs: [pending]
 
 */
-func NewDiagram(grid *TextGrid) *Diagram {
+func NewDiagram(grid *text.Grid) *Diagram {
 
-	workGrid := CopyTextGrid(grid)
+	workGrid := text.CopyGrid(grid)
 	workGrid.ReplaceTypeOnLine()
 	workGrid.ReplacePointMarkersOnLine()
 
@@ -81,12 +82,12 @@ func NewDiagram(grid *TextGrid) *Diagram {
 	}
 
 	boundaries := getAllBoundaries(workGrid)
-	boundarySetsStep1 := getDistinctShapes(NewAbstractionGrid(workGrid, boundaries))
+	boundarySetsStep1 := getDistinctShapes(text.NewAbstractionGrid(workGrid, boundaries))
 
 	if DEBUG {
 		fmt.Println("******* Distinct shapes found using AbstractionGrid *******")
 		for _, cells := range boundarySetsStep1 {
-			cells.printAsGrid()
+			cells.PrintAsGrid()
 		}
 		fmt.Println("******* Same set of shapes after processing them by filling *******")
 	}
@@ -94,34 +95,34 @@ func NewDiagram(grid *TextGrid) *Diagram {
 	//Find all the boundaries by using the special version of the filling method
 	//(fills in a different buffer than the buffer it reads from)
 	w, h := grid.Width(), grid.Height()
-	boundarySetsStep2 := []*CellSet{}
+	boundarySetsStep2 := []*text.CellSet{}
 	for _, cells := range boundarySetsStep1 {
 		//the fill buffer keeps track of which cells have been
 		//filled already
-		fillBuffer := NewTextGrid(3*w, 3*h)
+		fillBuffer := text.NewGrid(3*w, 3*h)
 
 		for yi := 0; yi < 3*h; yi++ {
 			for xi := 0; xi < 3*w; xi++ {
-				if !fillBuffer.IsBlankXY(Cell{xi, yi}) {
+				if !fillBuffer.IsBlankXY(text.Cell{xi, yi}) {
 					continue
 				}
 
-				copyGrid := NewTextGrid(0, 0)
-				copyGrid.Rows = NewAbstractionGrid(workGrid, cells).Rows
+				copyGrid := text.NewGrid(0, 0)
+				copyGrid.Rows = text.NewAbstractionGrid(workGrid, cells).Rows
 
-				boundaries := findBoundariesExpandingFrom(copyGrid, Cell{xi, yi})
+				boundaries := findBoundariesExpandingFrom(copyGrid, text.Cell{xi, yi})
 				if len(boundaries.Set) == 0 {
 					continue //i'm not sure why these occur
 				}
 				boundarySetsStep2 = append(boundarySetsStep2, makeScaledOneThirdEquivalent(boundaries))
 
-				copyGrid.Rows = NewAbstractionGrid(workGrid, cells).Rows
-				filled := copyGrid.fillContinuousArea(Cell{xi, yi}, '*')
-				FillCellsWith(fillBuffer.Rows, filled, '*')
-				FillCellsWith(fillBuffer.Rows, boundaries, '-')
+				copyGrid.Rows = text.NewAbstractionGrid(workGrid, cells).Rows
+				filled := copyGrid.FillContinuousArea(text.Cell{xi, yi}, '*')
+				text.FillCellsWith(fillBuffer.Rows, filled, '*')
+				text.FillCellsWith(fillBuffer.Rows, boundaries, '-')
 
 				if DEBUG {
-					makeScaledOneThirdEquivalent(boundaries).printAsGrid()
+					makeScaledOneThirdEquivalent(boundaries).PrintAsGrid()
 					fmt.Println("-----------------------------------")
 				}
 			}
@@ -149,7 +150,7 @@ func NewDiagram(grid *TextGrid) *Diagram {
 			// this is necessary because some mixed sets produce
 			// several distinct open sets after you subtract the
 			// closed sets from them
-			if set.Type(workGrid) == SET_OPEN {
+			if set.Type(workGrid) == text.SET_OPEN {
 				boundarySetsStep2 = remove(boundarySetsStep2, set)
 				boundarySetsStep2 = append(boundarySetsStep2, breakIntoDistinctBoundaries2(set, workGrid)...)
 			}
@@ -252,7 +253,7 @@ func NewDiagram(grid *TextGrid) *Diagram {
 	}
 
 	//assign markup to shapes
-	for _, pair := range grid.findMarkupTags() {
+	for _, pair := range grid.FindMarkupTags() {
 		cell := graphical.Cell(pair.Cell)
 		p := graphical.Point{X: d.G.Grid.CellMidX(cell), Y: d.G.Grid.CellMidY(cell)}
 		containingShape := FindSmallestShapeContaining(p, d.G.Shapes)
@@ -306,12 +307,12 @@ func NewDiagram(grid *TextGrid) *Diagram {
 	d.G.Shapes = removeDuplicateShapes(d.G.Shapes)
 
 	//copy again
-	workGrid = CopyTextGrid(grid)
+	workGrid = text.CopyGrid(grid)
 	workGrid.RemoveNonText()
 
 	// ****** handle text *******
 	//break up text into groups
-	textGroupGrid := CopyTextGrid(workGrid)
+	textGroupGrid := text.CopyGrid(workGrid)
 	gaps := textGroupGrid.GetAllBlanksBetweenCharacters()
 	//kludge
 	for c := range gaps.Set {
@@ -326,8 +327,8 @@ func NewDiagram(grid *TextGrid) *Diagram {
 	font := fontmeasure.GetFontForHeight(baseFont, d.G.Grid.CellH)
 
 	for _, textGroupCellSet := range textGroups {
-		isolationGrid := NewTextGrid(w, h)
-		CopySelectedCells(isolationGrid, textGroupCellSet, workGrid)
+		isolationGrid := text.NewGrid(w, h)
+		text.CopySelectedCells(isolationGrid, textGroupCellSet, workGrid)
 		strings := isolationGrid.FindStrings()
 		for _, pair := range strings {
 			cell := graphical.Cell(pair.C)
@@ -358,8 +359,8 @@ func NewDiagram(grid *TextGrid) *Diagram {
 			//TODO: if the strings start with bullets they should be aligned to the left
 
 			// position text correctly
-			otherStart := isolationGrid.OtherStringsStartInTheSameColumn(Cell(cell))
-			otherEnd := isolationGrid.OtherStringsEndInTheSameColumn(Cell(lastCell))
+			otherStart := isolationGrid.OtherStringsStartInTheSameColumn(text.Cell(cell))
+			otherEnd := isolationGrid.OtherStringsEndInTheSameColumn(text.Cell(lastCell))
 			if otherStart == 0 && otherEnd == 0 {
 				textObject.CenterHorizontallyBetween(int(minX), int(maxX), font)
 			} else if otherEnd > 0 && otherStart == 0 {
@@ -421,8 +422,8 @@ func removeDuplicateShapes(shapes []graphical.Shape) []graphical.Shape {
 	return origShapes
 }
 
-func createClosedComponentFromBoundaryCells(grid *TextGrid, cells *CellSet, gg graphical.Grid, allCornersRound bool) *graphical.Shape {
-	if cells.Type(grid) == SET_OPEN {
+func createClosedComponentFromBoundaryCells(grid *text.Grid, cells *text.CellSet, gg graphical.Grid, allCornersRound bool) *graphical.Shape {
+	if cells.Type(grid) == text.SET_OPEN {
 		panic("CellSet is open and cannot be handled by this method")
 	}
 	if len(cells.Set) < 2 {
@@ -432,14 +433,14 @@ func createClosedComponentFromBoundaryCells(grid *TextGrid, cells *CellSet, gg g
 	shape := graphical.NewShape()
 	shape.Closed = true
 	for c := range cells.Set {
-		if isOneOf(grid.Get(c), text_dashedLines) {
+		if grid.CellContainsDashedLineChar(c) {
 			shape.Dashed = true
 			break
 		}
 	}
 
-	workGrid := NewTextGrid(grid.Width(), grid.Height())
-	CopySelectedCells(workGrid, cells, grid)
+	workGrid := text.NewGrid(grid.Width(), grid.Height())
+	text.CopySelectedCells(workGrid, cells, grid)
 
 	start := cells.SomeCell()
 	if workGrid.IsCorner(start) {
@@ -472,16 +473,16 @@ func createClosedComponentFromBoundaryCells(grid *TextGrid, cells *CellSet, gg g
 	return shape
 }
 
-func removeObsoleteShapes(grid *TextGrid, sets []*CellSet) []*CellSet {
+func removeObsoleteShapes(grid *text.Grid, sets []*text.CellSet) []*text.CellSet {
 	if DEBUG {
 		fmt.Println("******* Removing obsolete shapes *******")
 		fmt.Println("******* Sets before *******")
 		for _, set := range sets {
-			set.printAsGrid()
+			set.PrintAsGrid()
 		}
 	}
 
-	filleds := []*CellSet{}
+	filleds := []*text.CellSet{}
 
 	//make filled versions of all the boundary sets
 	for _, set := range sets {
@@ -495,7 +496,7 @@ func removeObsoleteShapes(grid *TextGrid, sets []*CellSet) []*CellSet {
 	toRemove := map[int]bool{}
 	for _, set := range filleds {
 		//find the other sets that have common cells with set
-		common := []*CellSet{set}
+		common := []*text.CellSet{set}
 		for _, set2 := range filleds {
 			if set != set2 && set.HasCommonCells(set2) {
 				common = append(common, set2)
@@ -519,12 +520,12 @@ func removeObsoleteShapes(grid *TextGrid, sets []*CellSet) []*CellSet {
 
 		//make the sum set of the small sets on a grid
 		bb := largest.Bounds()
-		gridOfSmalls := NewTextGrid(bb.Max.X+2, bb.Max.Y+2)
+		gridOfSmalls := text.NewGrid(bb.Max.X+2, bb.Max.Y+2)
 		for _, set2 := range common {
-			FillCellsWith(gridOfSmalls.Rows, set2, '*')
+			text.FillCellsWith(gridOfSmalls.Rows, set2, '*')
 		}
-		gridLargest := NewTextGrid(bb.Max.X+2, bb.Max.Y+2)
-		FillCellsWith(gridLargest.Rows, largest, '*')
+		gridLargest := text.NewGrid(bb.Max.X+2, bb.Max.Y+2)
+		text.FillCellsWith(gridLargest.Rows, largest, '*')
 
 		idx := indexof(filleds, largest)
 		if gridLargest.Equals(*gridOfSmalls) {
@@ -532,7 +533,7 @@ func removeObsoleteShapes(grid *TextGrid, sets []*CellSet) []*CellSet {
 		}
 	}
 
-	setsToRemove := []*CellSet{}
+	setsToRemove := []*text.CellSet{}
 	for i := range toRemove {
 		setsToRemove = append(setsToRemove, sets[i])
 	}
@@ -543,19 +544,19 @@ func removeObsoleteShapes(grid *TextGrid, sets []*CellSet) []*CellSet {
 	return sets
 }
 
-func getFilledEquivalent(cells *CellSet, grid *TextGrid) *CellSet {
-	if cells.Type(grid) == SET_OPEN {
-		result := NewCellSet()
+func getFilledEquivalent(cells *text.CellSet, grid *text.Grid) *text.CellSet {
+	if cells.Type(grid) == text.SET_OPEN {
+		result := text.NewCellSet()
 		result.AddAll(cells)
 		return result
 	}
 	bb := cells.Bounds()
-	grid = NewTextGrid(bb.Max.X+2, bb.Max.Y+2)
-	FillCellsWith(grid.Rows, cells, '*')
+	grid = text.NewGrid(bb.Max.X+2, bb.Max.Y+2)
+	text.FillCellsWith(grid.Rows, cells, '*')
 
 	//find a cell that has a blank both on the east and the west
 	// NOTE(akavel): or bottom-right cell, apparently - bug?
-	c := Cell{0, 0}
+	c := text.Cell{0, 0}
 	for it := grid.Iter(); it.Next(); {
 		c = it.Cell()
 		if grid.IsBlank(c) || !grid.IsBlank(c.East()) || !grid.IsBlank(c.West()) {
@@ -566,15 +567,15 @@ func getFilledEquivalent(cells *CellSet, grid *TextGrid) *CellSet {
 	// found
 	c = c.East()
 	if grid.IsOutOfBounds(c) {
-		newcells := NewCellSet()
+		newcells := text.NewCellSet()
 		newcells.AddAll(cells)
 		return newcells
 	}
-	grid.fillContinuousArea(c, '*')
+	grid.FillContinuousArea(c, '*')
 	return grid.GetAllNonBlank()
 }
 
-func indexof(vec []*CellSet, elem *CellSet) int {
+func indexof(vec []*text.CellSet, elem *text.CellSet) int {
 	for i := range vec {
 		if vec[i] == elem {
 			return i
@@ -583,26 +584,26 @@ func indexof(vec []*CellSet, elem *CellSet) int {
 	return -1
 }
 
-func categorizeBoundaries(sets []*CellSet, grid *TextGrid) (open, closed, mixed []*CellSet) {
+func categorizeBoundaries(sets []*text.CellSet, grid *text.Grid) (open, closed, mixed []*text.CellSet) {
 	//split boundaries to open, closed and mixed
 	for _, set := range sets {
 		switch set.Type(grid) {
-		case SET_CLOSED:
+		case text.SET_CLOSED:
 			if DEBUG {
 				fmt.Println("Closed boundaries:")
-				set.printAsGrid()
+				set.PrintAsGrid()
 			}
 			closed = append(closed, set)
-		case SET_OPEN:
+		case text.SET_OPEN:
 			if DEBUG {
 				fmt.Println("Open boundaries:")
-				set.printAsGrid()
+				set.PrintAsGrid()
 			}
 			open = append(open, set)
-		case SET_MIXED:
+		case text.SET_MIXED:
 			if DEBUG {
 				fmt.Println("Mixed boundaries:")
-				set.printAsGrid()
+				set.PrintAsGrid()
 			}
 			mixed = append(mixed, set)
 		}
@@ -610,7 +611,7 @@ func categorizeBoundaries(sets []*CellSet, grid *TextGrid) (open, closed, mixed 
 	return
 }
 
-func remove(vec []*CellSet, elem *CellSet) []*CellSet {
+func remove(vec []*text.CellSet, elem *text.CellSet) []*text.CellSet {
 	// remove 'set' from vector, if found
 	for i := range vec {
 		if vec[i] == elem {
@@ -620,8 +621,8 @@ func remove(vec []*CellSet, elem *CellSet) []*CellSet {
 	return vec
 }
 
-func removeDuplicateSets(list []*CellSet) []*CellSet {
-	uniques := []*CellSet{}
+func removeDuplicateSets(list []*text.CellSet) []*text.CellSet {
+	uniques := []*text.CellSet{}
 	for _, set := range list {
 		original := true
 		for _, u := range uniques {
@@ -637,30 +638,30 @@ func removeDuplicateSets(list []*CellSet) []*CellSet {
 	return uniques
 }
 
-func makeScaledOneThirdEquivalent(cells *CellSet) *CellSet {
+func makeScaledOneThirdEquivalent(cells *text.CellSet) *text.CellSet {
 	bb := cells.Bounds()
-	gridBig := NewTextGrid(bb.Max.X+2, bb.Max.Y+2)
-	FillCellsWith(gridBig.Rows, cells, '*')
+	gridBig := text.NewGrid(bb.Max.X+2, bb.Max.Y+2)
+	text.FillCellsWith(gridBig.Rows, cells, '*')
 
-	gridSmall := NewTextGrid((bb.Max.X+2)/3, (bb.Max.Y+2)/3)
+	gridSmall := text.NewGrid((bb.Max.X+2)/3, (bb.Max.Y+2)/3)
 	for it := gridBig.Iter(); it.Next(); {
 		c := it.Cell()
 		if !gridBig.IsBlank(c) {
-			gridSmall.Set(Cell{c.X / 3, c.Y / 3}, '*')
+			gridSmall.Set(text.Cell{c.X / 3, c.Y / 3}, '*')
 		}
 	}
 	return gridSmall.GetAllNonBlank()
 }
 
-func findBoundariesExpandingFrom(grid *TextGrid, seed Cell) *CellSet {
-	boundaries := NewCellSet()
+func findBoundariesExpandingFrom(grid *text.Grid, seed text.Cell) *text.CellSet {
+	boundaries := text.NewCellSet()
 	if grid.IsOutOfBounds(seed) {
 		return boundaries
 	}
 	oldChar := grid.Get(seed)
 	newChar := rune(1) //TODO: kludge
-	stack := []Cell{seed}
-	expand := func(c Cell) {
+	stack := []text.Cell{seed}
+	expand := func(c text.Cell) {
 		switch grid.Get(c) {
 		case oldChar:
 			stack = append(stack, c)
@@ -669,7 +670,7 @@ func findBoundariesExpandingFrom(grid *TextGrid, seed Cell) *CellSet {
 		}
 	}
 	for len(stack) > 0 {
-		var c Cell
+		var c text.Cell
 		c, stack = stack[len(stack)-1], stack[:len(stack)-1]
 		grid.Set(c, newChar)
 		expand(c.North())
@@ -680,39 +681,39 @@ func findBoundariesExpandingFrom(grid *TextGrid, seed Cell) *CellSet {
 	return boundaries
 }
 
-func getDistinctShapes(g *AbstractionGrid) []*CellSet {
-	result := []*CellSet{}
+func getDistinctShapes(g *text.AbstractionGrid) []*text.CellSet {
+	result := []*text.CellSet{}
 
-	tg := TextGrid{Rows: g.Rows}
+	tg := text.Grid{Rows: g.Rows}
 	nonBlank := tg.GetAllNonBlank()
 
 	distinct := breakIntoDistinctBoundaries(nonBlank)
 	for _, set := range distinct {
-		temp := EmptyAbstractionGrid(g.Width(), g.Height())
-		FillCellsWith(temp.Rows, set, '*')
+		temp := text.EmptyAbstractionGrid(g.Width(), g.Height())
+		text.FillCellsWith(temp.Rows, set, '*')
 		result = append(result, temp.GetAsTextGrid().GetAllNonBlank())
 	}
 	return result
 }
 
-func breakIntoDistinctBoundaries(cells *CellSet) []*CellSet {
-	result := []*CellSet{}
+func breakIntoDistinctBoundaries(cells *text.CellSet) []*text.CellSet {
+	result := []*text.CellSet{}
 	bb := cells.Bounds()
-	boundaryGrid := NewTextGrid(bb.Max.X+2, bb.Max.Y+2)
-	FillCellsWith(boundaryGrid.Rows, cells, '*')
+	boundaryGrid := text.NewGrid(bb.Max.X+2, bb.Max.Y+2)
+	text.FillCellsWith(boundaryGrid.Rows, cells, '*')
 
 	for c := range cells.Set {
 		if boundaryGrid.IsBlankXY(c) {
 			continue
 		}
-		boundarySet := boundaryGrid.fillContinuousArea(c, ' ')
+		boundarySet := boundaryGrid.FillContinuousArea(c, ' ')
 		result = append(result, boundarySet)
 	}
 	return result
 }
 
-func breakIntoDistinctBoundaries2(cells *CellSet, grid *TextGrid) []*CellSet {
-	return getDistinctShapes(NewAbstractionGrid(grid, cells))
+func breakIntoDistinctBoundaries2(cells *text.CellSet, grid *text.Grid) []*text.CellSet {
+	return getDistinctShapes(text.NewAbstractionGrid(grid, cells))
 }
 
 /*
@@ -737,16 +738,16 @@ into the following 3:
 
 Returns a list of boundaries that are either open or closed but not mixed.
 */
-func breakTrulyMixedBoundaries(cells *CellSet, grid *TextGrid) []*CellSet {
-	result := []*CellSet{}
-	visitedEnds := NewCellSet()
-	workGrid := NewTextGrid(grid.Width(), grid.Height())
-	CopySelectedCells(workGrid, cells, grid)
+func breakTrulyMixedBoundaries(cells *text.CellSet, grid *text.Grid) []*text.CellSet {
+	result := []*text.CellSet{}
+	visitedEnds := text.NewCellSet()
+	workGrid := text.NewGrid(grid.Width(), grid.Height())
+	text.CopySelectedCells(workGrid, cells, grid)
 	for start := range cells.Set {
 		if !workGrid.IsLinesEnd(start) || visitedEnds.Contains(start) {
 			continue
 		}
-		set := NewCellSet()
+		set := text.NewCellSet()
 		set.Add(start)
 
 		prev := start
@@ -783,7 +784,7 @@ func breakTrulyMixedBoundaries(cells *CellSet, grid *TextGrid) []*CellSet {
 	}
 
 	//substract all boundary sets from this CellSet
-	whatsLeft := NewCellSet()
+	whatsLeft := text.NewCellSet()
 	whatsLeft.AddAll(cells)
 	for _, set := range result {
 		whatsLeft.SubtractSet(set)
@@ -792,11 +793,11 @@ func breakTrulyMixedBoundaries(cells *CellSet, grid *TextGrid) []*CellSet {
 	return result
 }
 
-func getAllBoundaries(g *TextGrid) *CellSet {
-	set := NewCellSet()
+func getAllBoundaries(g *text.Grid) *text.CellSet {
+	set := text.NewCellSet()
 	for y, row := range g.Rows {
 		for x := range row {
-			c := Cell{x, y}
+			c := text.Cell{x, y}
 			if g.IsBoundary(c) {
 				set.Add(c)
 			}

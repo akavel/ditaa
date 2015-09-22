@@ -1,13 +1,13 @@
 //WIP
 
-package main
+package text
 
 import (
 	"regexp"
 )
 
 /*
-This is a TextGrid (usually 3x3) that contains the equivalent
+This is a Grid (usually 3x3) that contains the equivalent
 of a 2D reqular expression (which uses custom syntax to make
 things more visual, but standard syntax is also possible).
 
@@ -110,7 +110,7 @@ func NewCriteria(criteria ...Criteria) Criteria {
 	}
 	return c
 }
-func (c Criteria) AnyMatch(g *TextGrid) bool {
+func (c Criteria) AnyMatch(g *Grid) bool {
 	for _, p := range c {
 		if p.Match(g) {
 			return true
@@ -147,7 +147,7 @@ func mustCompileRow(pattern string) *regexp.Regexp {
 	}
 	return regexp.MustCompile(re)
 }
-func (p *GridPattern) Match(t *TextGrid) bool {
+func (p *GridPattern) Match(t *Grid) bool {
 	for i, re := range *p {
 		if !re.MatchString(string(t.Rows[i])) {
 			return false

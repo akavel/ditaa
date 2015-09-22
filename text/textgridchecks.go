@@ -1,4 +1,4 @@
-package main
+package text
 
 import (
 	"fmt"
@@ -20,7 +20,7 @@ func (c Cell) String() string { return fmt.Sprintf("(%d, %d)", c.X, c.Y) }
 func isAlphNum(ch rune) bool             { return unicode.IsLetter(ch) || unicode.IsDigit(ch) }
 func isOneOf(ch rune, group string) bool { return strings.ContainsRune(group, ch) }
 
-func (t *TextGrid) IsBullet(c Cell) bool {
+func (t *Grid) IsBullet(c Cell) bool {
 	ch := t.Get(c)
 	return (ch == 'o' || ch == '*') &&
 		t.IsBlankNon0(c.East()) &&
@@ -28,19 +28,19 @@ func (t *TextGrid) IsBullet(c Cell) bool {
 		isAlphNum(t.Get(c.East().East()))
 }
 
-func (t *TextGrid) IsOutOfBounds(c Cell) bool {
+func (t *Grid) IsOutOfBounds(c Cell) bool {
 	return c.X >= t.Width() || c.Y >= t.Height() || c.X < 0 || c.Y < 0
 }
 
-func (t *TextGrid) IsBlankNon0(c Cell) bool { return t.Get(c) == ' ' }
-func (t *TextGrid) IsBlank(c Cell) bool {
+func (t *Grid) IsBlankNon0(c Cell) bool { return t.Get(c) == ' ' }
+func (t *Grid) IsBlank(c Cell) bool {
 	ch := t.Get(c)
 	if ch == 0 {
 		return false // FIXME: should this be false, or true (see 'isBlank(x,y)' in Java)
 	}
 	return ch == ' '
 }
-func (t *TextGrid) IsBlankXY(c Cell) bool {
+func (t *Grid) IsBlankXY(c Cell) bool {
 	ch := t.Get(c)
 	if ch == 0 {
 		return true
@@ -48,7 +48,7 @@ func (t *TextGrid) IsBlankXY(c Cell) bool {
 	return ch == ' '
 }
 
-func (t *TextGrid) IsBoundary(c Cell) bool {
+func (t *Grid) IsBoundary(c Cell) bool {
 	ch := t.Get(c)
 	switch ch {
 	case 0:
@@ -62,62 +62,62 @@ func (t *TextGrid) IsBoundary(c Cell) bool {
 	return isOneOf(ch, text_boundaries) && !t.IsLoneDiagonal(c)
 }
 
-func (t *TextGrid) IsIntersection(c Cell) bool {
+func (t *Grid) IsIntersection(c Cell) bool {
 	return intersectionCriteria.AnyMatch(t.TestingSubGrid(c))
 }
-func (t *TextGrid) IsNormalCorner(c Cell) bool {
+func (t *Grid) IsNormalCorner(c Cell) bool {
 	return normalCornerCriteria.AnyMatch(t.TestingSubGrid(c))
 }
-func (t *TextGrid) IsRoundCorner(c Cell) bool {
+func (t *Grid) IsRoundCorner(c Cell) bool {
 	return roundCornerCriteria.AnyMatch(t.TestingSubGrid(c))
 }
-func (t *TextGrid) IsStub(c Cell) bool {
+func (t *Grid) IsStub(c Cell) bool {
 	return stubCriteria.AnyMatch(t.TestingSubGrid(c))
 }
-func (t *TextGrid) IsCrossOnLine(c Cell) bool {
+func (t *Grid) IsCrossOnLine(c Cell) bool {
 	return crossOnLineCriteria.AnyMatch(t.TestingSubGrid(c))
 }
-func (t *TextGrid) IsLoneDiagonal(c Cell) bool {
+func (t *Grid) IsLoneDiagonal(c Cell) bool {
 	return loneDiagonalCriteria.AnyMatch(t.TestingSubGrid(c))
 }
-func (t *TextGrid) IsCross(c Cell) bool      { return crossCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsT(c Cell) bool          { return TCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsK(c Cell) bool          { return KCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsInverseT(c Cell) bool   { return inverseTCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsInverseK(c Cell) bool   { return inverseKCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsCorner1(c Cell) bool    { return corner1Criteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsCorner2(c Cell) bool    { return corner2Criteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsCorner3(c Cell) bool    { return corner3Criteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsCorner4(c Cell) bool    { return corner4Criteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsStarOnLine(c Cell) bool { return starOnLineCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsLinesEnd(c Cell) bool   { return linesEndCriteria.AnyMatch(t.TestingSubGrid(c)) }
-func (t *TextGrid) IsHorizontalCrossOnLine(c Cell) bool {
+func (t *Grid) IsCross(c Cell) bool      { return crossCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsT(c Cell) bool          { return TCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsK(c Cell) bool          { return KCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsInverseT(c Cell) bool   { return inverseTCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsInverseK(c Cell) bool   { return inverseKCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsCorner1(c Cell) bool    { return corner1Criteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsCorner2(c Cell) bool    { return corner2Criteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsCorner3(c Cell) bool    { return corner3Criteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsCorner4(c Cell) bool    { return corner4Criteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsStarOnLine(c Cell) bool { return starOnLineCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsLinesEnd(c Cell) bool   { return linesEndCriteria.AnyMatch(t.TestingSubGrid(c)) }
+func (t *Grid) IsHorizontalCrossOnLine(c Cell) bool {
 	return horizontalCrossOnLineCriteria.AnyMatch(t.TestingSubGrid(c))
 }
-func (t *TextGrid) IsVerticalCrossOnLine(c Cell) bool {
+func (t *Grid) IsVerticalCrossOnLine(c Cell) bool {
 	return verticalCrossOnLineCriteria.AnyMatch(t.TestingSubGrid(c))
 }
 
-// func (t *TextGrid) Is(c Cell) bool { return .AnyMatch(t.TestingSubGrid(c))}
+// func (t *Grid) Is(c Cell) bool { return .AnyMatch(t.TestingSubGrid(c))}
 
-func (t *TextGrid) IsCorner(c Cell) bool { return t.IsNormalCorner(c) || t.IsRoundCorner(c) }
-func (t *TextGrid) IsHorizontalLine(c Cell) bool {
+func (t *Grid) IsCorner(c Cell) bool { return t.IsNormalCorner(c) || t.IsRoundCorner(c) }
+func (t *Grid) IsHorizontalLine(c Cell) bool {
 	ch := t.Get(c)
 	if ch == 0 {
 		return false
 	}
 	return isOneOf(ch, text_horizontalLines)
 }
-func (t *TextGrid) IsVerticalLine(c Cell) bool {
+func (t *Grid) IsVerticalLine(c Cell) bool {
 	ch := t.Get(c)
 	if ch == 0 {
 		return false
 	}
 	return isOneOf(ch, text_verticalLines)
 }
-func (t *TextGrid) IsLine(c Cell) bool { return t.IsHorizontalLine(c) || t.IsVerticalLine(c) }
+func (t *Grid) IsLine(c Cell) bool { return t.IsHorizontalLine(c) || t.IsVerticalLine(c) }
 
-func (t *TextGrid) FollowCell(c Cell, blocked *Cell) *CellSet {
+func (t *Grid) FollowCell(c Cell, blocked *Cell) *CellSet {
 	switch {
 	case t.IsIntersection(c):
 		return t.followIntersection(c, blocked)
@@ -133,7 +133,7 @@ func (t *TextGrid) FollowCell(c Cell, blocked *Cell) *CellSet {
 	panic("Cannot follow cell: cannot determine cell type")
 }
 
-func (t *TextGrid) followIntersection(c Cell, blocked *Cell) *CellSet {
+func (t *Grid) followIntersection(c Cell, blocked *Cell) *CellSet {
 	result := NewCellSet()
 	check := func(c Cell, entry int) {
 		if t.hasEntryPoint(c, entry) {
@@ -150,7 +150,7 @@ func (t *TextGrid) followIntersection(c Cell, blocked *Cell) *CellSet {
 	return result
 }
 
-func (t *TextGrid) followCorner(c Cell, blocked *Cell) *CellSet {
+func (t *Grid) followCorner(c Cell, blocked *Cell) *CellSet {
 	switch {
 	case t.IsCorner1(c):
 		return t.followCornerX(c.South(), c.East(), blocked)
@@ -164,7 +164,7 @@ func (t *TextGrid) followCorner(c Cell, blocked *Cell) *CellSet {
 	return nil
 }
 
-func (t *TextGrid) followCornerX(c1, c2 Cell, blocked *Cell) *CellSet {
+func (t *Grid) followCornerX(c1, c2 Cell, blocked *Cell) *CellSet {
 	result := NewCellSet()
 	if blocked == nil || *blocked != c1 {
 		result.Add(c1)
@@ -175,7 +175,7 @@ func (t *TextGrid) followCornerX(c1, c2 Cell, blocked *Cell) *CellSet {
 	return result
 }
 
-func (t *TextGrid) followLine(c Cell, blocked *Cell) *CellSet {
+func (t *Grid) followLine(c Cell, blocked *Cell) *CellSet {
 	switch {
 	case t.IsHorizontalLine(c):
 		return t.followBoundariesX(blocked, c.East(), c.West())
@@ -185,12 +185,12 @@ func (t *TextGrid) followLine(c Cell, blocked *Cell) *CellSet {
 	return nil
 }
 
-func (t *TextGrid) followStub(c Cell, blocked *Cell) *CellSet {
+func (t *Grid) followStub(c Cell, blocked *Cell) *CellSet {
 	// [akavel] in original code, the condition quit when first boundary found, but that probably shouldn't matter
 	return t.followBoundariesX(blocked, c.East(), c.West(), c.North(), c.South())
 }
 
-func (t *TextGrid) followBoundariesX(blocked *Cell, boundaries ...Cell) *CellSet {
+func (t *Grid) followBoundariesX(blocked *Cell, boundaries ...Cell) *CellSet {
 	result := NewCellSet()
 	for _, c := range boundaries {
 		if blocked != nil && *blocked == c {
@@ -203,7 +203,7 @@ func (t *TextGrid) followBoundariesX(blocked *Cell, boundaries ...Cell) *CellSet
 	return result
 }
 
-func (t *TextGrid) followCrossOnLine(c Cell, blocked *Cell) *CellSet {
+func (t *Grid) followCrossOnLine(c Cell, blocked *Cell) *CellSet {
 	result := NewCellSet()
 	switch {
 	case t.IsHorizontalCrossOnLine(c):
@@ -219,7 +219,7 @@ func (t *TextGrid) followCrossOnLine(c Cell, blocked *Cell) *CellSet {
 	return result
 }
 
-func (t *TextGrid) hasEntryPoint(c Cell, entryid int) bool {
+func (t *Grid) hasEntryPoint(c Cell, entryid int) bool {
 	entries := []string{
 		text_entryPoints1,
 		text_entryPoints2,
@@ -237,7 +237,7 @@ func (t *TextGrid) hasEntryPoint(c Cell, entryid int) bool {
 	return isOneOf(t.Get(c), entries[entryid])
 }
 
-func (t *TextGrid) HasBlankCells() bool {
+func (t *Grid) HasBlankCells() bool {
 	for it := t.Iter(); it.Next(); {
 		if t.IsBlank(it.Cell()) {
 			return true
@@ -246,26 +246,26 @@ func (t *TextGrid) HasBlankCells() bool {
 	return false
 }
 
-func (t *TextGrid) CellContainsDashedLineChar(c Cell) bool {
+func (t *Grid) CellContainsDashedLineChar(c Cell) bool {
 	return isOneOf(t.Get(c), text_dashedLines)
 }
 
-func (t *TextGrid) IsArrowhead(c Cell) bool {
+func (t *Grid) IsArrowhead(c Cell) bool {
 	return t.IsNorthArrowhead(c) || t.IsSouthArrowhead(c) || t.IsWestArrowhead(c) || t.IsEastArrowhead(c)
 }
 
-func (t *TextGrid) IsNorthArrowhead(c Cell) bool { return t.Get(c) == '^' }
-func (t *TextGrid) IsWestArrowhead(c Cell) bool  { return t.Get(c) == '<' }
-func (t *TextGrid) IsEastArrowhead(c Cell) bool  { return t.Get(c) == '>' }
-func (t *TextGrid) IsSouthArrowhead(c Cell) bool {
+func (t *Grid) IsNorthArrowhead(c Cell) bool { return t.Get(c) == '^' }
+func (t *Grid) IsWestArrowhead(c Cell) bool  { return t.Get(c) == '<' }
+func (t *Grid) IsEastArrowhead(c Cell) bool  { return t.Get(c) == '>' }
+func (t *Grid) IsSouthArrowhead(c Cell) bool {
 	return isOneOf(t.Get(c), "Vv") && t.IsVerticalLine(c.North())
 }
 
-func (t *TextGrid) IsPointCell(c Cell) bool {
+func (t *Grid) IsPointCell(c Cell) bool {
 	return t.IsCorner(c) || t.IsIntersection(c) || t.IsStub(c) || t.IsLinesEnd(c)
 }
 
-func (t *TextGrid) IsBlankBetweenCharacters(c Cell) bool {
+func (t *Grid) IsBlankBetweenCharacters(c Cell) bool {
 	return t.IsBlank(c) && !t.IsBlank(c.East()) && !t.IsBlank(c.West())
 }
 
@@ -288,10 +288,10 @@ const (
 	text_entryPoints8           = `-=+\/`
 )
 
-func (t *TextGrid) isOnHorizontalLine(c Cell) bool {
+func (t *Grid) isOnHorizontalLine(c Cell) bool {
 	return t.IsHorizontalLine(c.West()) && t.IsHorizontalLine(c.East())
 }
 
-func (t *TextGrid) isOnVerticalLine(c Cell) bool {
+func (t *Grid) isOnVerticalLine(c Cell) bool {
 	return t.IsVerticalLine(c.North()) && t.IsVerticalLine(c.South())
 }

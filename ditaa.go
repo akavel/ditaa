@@ -9,12 +9,12 @@ import (
 	"os"
 
 	"github.com/akavel/ditaa/graphical"
+	"github.com/akavel/ditaa/text"
 )
 
 const (
-	DEFAULT_TAB_SIZE = 8
-	CELL_WIDTH       = 10
-	CELL_HEIGHT      = 14
+	CELL_WIDTH  = 10
+	CELL_HEIGHT = 14
 )
 
 func main() {
@@ -53,7 +53,7 @@ func run(infile, outfile string) error {
 }
 
 func RenderPNG(r io.Reader, w io.Writer) error {
-	grid := NewTextGrid(0, 0)
+	grid := text.NewGrid(0, 0)
 	err := grid.LoadFrom(r)
 	if err != nil {
 		return err

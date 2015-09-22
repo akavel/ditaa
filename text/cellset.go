@@ -1,4 +1,4 @@
-package main
+package text
 
 import (
 	"fmt"
@@ -80,7 +80,7 @@ func (s1 *CellSet) Equals(s2 *CellSet) bool {
 	return true
 }
 
-func (s *CellSet) Type(grid *TextGrid) (typ CellSetType) {
+func (s *CellSet) Type(grid *Grid) (typ CellSetType) {
 	if s.typ != SET_UNINITIALIZED {
 		return s.typ
 	}
@@ -111,8 +111,8 @@ func (s *CellSet) Type(grid *TextGrid) (typ CellSetType) {
 	return SET_UNDETERMINED
 }
 
-func (s *CellSet) getTypeAccordingToTraceMethod(grid *TextGrid) CellSetType {
-	workGrid := NewTextGrid(grid.Width(), grid.Height())
+func (s *CellSet) getTypeAccordingToTraceMethod(grid *Grid) CellSetType {
+	workGrid := NewGrid(grid.Width(), grid.Height())
 	CopySelectedCells(workGrid, s, grid)
 
 	//start with a line end if it exists or with a "random" cell if not
@@ -146,13 +146,13 @@ func (s *CellSet) getTypeAccordingToTraceMethod(grid *TextGrid) CellSetType {
 	return SET_CLOSED
 }
 
-func (s *CellSet) getTypeAccordingToFillMethod(grid *TextGrid) CellSetType {
+func (s *CellSet) getTypeAccordingToFillMethod(grid *Grid) CellSetType {
 	tempSet := NewCellSet()
 	tempSet.Set = s.Set
 	bb := s.Bounds()
 	tempSet.translate(-bb.Min.X+1, -bb.Min.Y+1)
 	subGrid := grid.SubGrid(bb.Min.X-1, bb.Min.Y-1, bb.Max.X-bb.Min.X+3, bb.Max.Y-bb.Min.Y+3)
-	temp := NewTextGrid(0, 0)
+	temp := NewGrid(0, 0)
 	temp.Rows = NewAbstractionGrid(subGrid, tempSet).Rows
 
 	var fillCell *Cell
@@ -167,7 +167,7 @@ func (s *CellSet) getTypeAccordingToFillMethod(grid *TextGrid) CellSetType {
 		fmt.Fprintln(os.Stderr, "Unexpected error: fill method cannot fill anywhere")
 		return SET_UNDETERMINED
 	}
-	temp.fillContinuousArea(*fillCell, '*')
+	temp.FillContinuousArea(*fillCell, '*')
 	if temp.HasBlankCells() {
 		return SET_HAS_CLOSED_AREA
 	}
