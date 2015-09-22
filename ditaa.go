@@ -2,11 +2,14 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"image"
 	"image/png"
 	"io"
+	"log"
 	"os"
+	"runtime/pprof"
 
 	"github.com/akavel/ditaa/graphical"
 	"github.com/akavel/ditaa/text"
@@ -18,12 +21,21 @@ const (
 )
 
 func main() {
-	if len(os.Args[1:]) != 2 {
+	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "USAGE: %s INFILE OUTFILE.png\n", os.Args[0])
+	}
+	profile := flag.String("pprof", "", `["cpu" or empty] write performance profiling info to cpu.prof file`)
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) != 2 {
+		flag.Usage()
 		os.Exit(1)
 	}
 
-	err := run(os.Args[1], os.Args[2])
+	defer profiler(*profile)()
+
+	err := run(args[0], args[1])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(2)
@@ -76,4 +88,18 @@ func RenderPNG(r io.Reader, w io.Writer) error {
 		return err
 	}
 	return nil
+}
+
+func profiler(what string) (closer func()) {
+	switch what {
+	case "cpu":
+		f, err := os.Create(what + ".prof")
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		return pprof.StopCPUProfile
+	default:
+		return func() {}
+	}
 }

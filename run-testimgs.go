@@ -48,11 +48,12 @@ func run() error {
 func RunDitaa(src, dst string) error {
 	os.Remove(dst)
 	fmt.Println("\nDITAA", src, "->", dst)
-	cmd := exec.Command("ditaa", src, dst)
+	cmd := exec.Command("ditaa", "--pprof=cpu", src, dst)
 	out, err := cmd.CombinedOutput()
 	os.Stdout.Write(out)
 	if err != nil && !*forceAll {
 		return err
 	}
+	os.Rename("cpu.prof", dst+".prof")
 	return nil
 }
