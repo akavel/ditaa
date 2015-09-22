@@ -387,28 +387,15 @@ func (t *TextGrid) ReplacePointMarkersOnLine() {
 		if !isOneOf(ch, text_pointMarkers) || !t.IsStarOnLine(c) {
 			continue
 		}
-		isOnHorizontalLine :=
-			isOneOf(t.Get(c.East()), text_horizontalLines) ||
-				isOneOf(t.Get(c.West()), text_horizontalLines)
-		isOnVerticalLine :=
-			isOneOf(t.Get(c.North()), text_verticalLines) ||
-				isOneOf(t.Get(c.South()), text_verticalLines)
+		onH := t.IsHorizontalLine(c.East()) || t.IsHorizontalLine(c.West())
+		onV := t.IsVerticalLine(c.North()) || t.IsVerticalLine(c.South())
 		switch {
-		case isOnHorizontalLine && isOnVerticalLine:
+		case onH && onV:
 			t.Set(c, '+')
-			// if DEBUG {
-			// 	fmt.Printf("replaced marker on line '%v' with +\n", c)
-			// }
-		case isOnHorizontalLine:
+		case onH:
 			t.Set(c, '-')
-			// if DEBUG {
-			// 	fmt.Printf("replaced marker on line '%v' with -\n", c)
-			// }
-		case isOnVerticalLine:
+		case onV:
 			t.Set(c, '|')
-			// if DEBUG {
-			// 	fmt.Printf("replaced marker on line '%v' with |\n", c)
-			// }
 		}
 	}
 }
