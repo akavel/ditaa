@@ -64,40 +64,40 @@ type Criteria []gridPattern
 type gridPattern [3]*regexp.Regexp
 
 var gridPatternChars = map[byte]string{
-	'[':  "[^|:]",
-	'|':  "[|:]",
-	'-':  "[-=]",
-	'!':  "[^-=\\/\\\\+|:]",
-	'b':  "[-=\\/\\\\+|:]",
-	'^':  "[\\/\\\\+|:]",
-	'(':  "[-=\\/\\\\+]",
-	'~':  ".",
-	'+':  "\\+",
-	'\\': "\\\\",
-	's':  "[-=+|:]",
-	'S':  "[\\/\\\\]",
-	'*':  "\\*",
+	'[':  `[^|:]`,
+	'|':  `[|:]`,
+	'-':  `[-=]`,
+	'!':  `[^-=\/\\+|:]`,
+	'b':  `[-=\/\\+|:]`,
+	'^':  `[\/\\+|:]`,
+	'(':  `[-=\/\\+]`,
+	'~':  `.`,
+	'+':  `\+`,
+	'\\': `\\`,
+	's':  `[-=+|:]`,
+	'S':  `[\/\\]`,
+	'*':  `\*`,
 
 	//entry points
-	'1': "[\\\\]",
-	'2': "[|:+\\/\\\\]",
-	'3': "[\\/]",
-	'4': "[-=+\\/\\\\]",
-	'5': "[\\\\]",
-	'6': "[|:+\\/\\\\]",
-	'7': "[\\/]",
-	'8': "[-=+\\/\\\\]",
+	'1': `[\\]`,
+	'2': `[|:+\/\\]`,
+	'3': `[\/]`,
+	'4': `[-=+\/\\]`,
+	'5': `[\\]`,
+	'6': `[|:+\/\\]`,
+	'7': `[\/]`,
+	'8': `[-=+\/\\]`,
 }
 
 var gridPatternCharsInv = map[byte]string{
-	'1': "[^\\\\]",
-	'2': "[^|:+\\/\\\\]",
-	'3': "[^\\/]",
-	'4': "[^-=+\\/\\\\]",
-	'5': "[^\\\\]",
-	'6': "[^|:+\\/\\\\]",
-	'7': "[^\\/]",
-	'8': "[^-=+\\/\\\\]",
+	'1': `[^\\]`,
+	'2': `[^|:+\/\\]`,
+	'3': `[^\/]`,
+	'4': `[^-=+\/\\]`,
+	'5': `[^\\]`,
+	'6': `[^|:+\/\\]`,
+	'7': `[^\/]`,
+	'8': `[^-=+\/\\]`,
 }
 
 func NewCriterion(rowtop, rowmid, rowbot string) Criteria {
@@ -157,61 +157,61 @@ func (p *gridPattern) match(t *Grid) bool {
 }
 
 var (
-	crossCriteria    = NewCriterion(".6.", "4+8", ".2.")
-	_KCriteria       = NewCriterion(".6.", "%4+8", ".2.")
-	inverseKCriteria = NewCriterion(".6.", "4+%8", ".2.")
-	_TCriteria       = NewCriterion(".%6.", "4+8", ".2.")
-	inverseTCriteria = NewCriterion(".6.", "4+8", ".%2.")
+	crossCriteria    = NewCriterion(`.6.`, `4+8`, `.2.`)
+	_KCriteria       = NewCriterion(`.6.`, `%4+8`, `.2.`)
+	inverseKCriteria = NewCriterion(`.6.`, `4+%8`, `.2.`)
+	_TCriteria       = NewCriterion(`.%6.`, `4+8`, `.2.`)
+	inverseTCriteria = NewCriterion(`.6.`, `4+8`, `.%2.`)
 
 	// ****** normal corners *******
-	normalCorner1Criteria = NewCriterion(".[.", "~+(", ".^.")
-	normalCorner2Criteria = NewCriterion(".[.", "(+~", ".^.")
-	normalCorner3Criteria = NewCriterion(".^.", "(+~", ".[.")
-	normalCorner4Criteria = NewCriterion(".^.", "~+(", ".[.")
+	normalCorner1Criteria = NewCriterion(`.[.`, `~+(`, `.^.`)
+	normalCorner2Criteria = NewCriterion(`.[.`, `(+~`, `.^.`)
+	normalCorner3Criteria = NewCriterion(`.^.`, `(+~`, `.[.`)
+	normalCorner4Criteria = NewCriterion(`.^.`, `~+(`, `.[.`)
 
 	// ******* round corners *******
-	roundCorner1Criteria = NewCriterion(".[.", "~/4", ".2.")
-	roundCorner2Criteria = NewCriterion(".[.", "4\\~", ".2.")
-	roundCorner3Criteria = NewCriterion(".6.", "4/~", ".[.")
-	roundCorner4Criteria = NewCriterion(".6.", "~\\8", ".[.")
+	roundCorner1Criteria = NewCriterion(`.[.`, `~/4`, `.2.`)
+	roundCorner2Criteria = NewCriterion(`.[.`, `4\~`, `.2.`)
+	roundCorner3Criteria = NewCriterion(`.6.`, `4/~`, `.[.`)
+	roundCorner4Criteria = NewCriterion(`.6.`, `~\8`, `.[.`)
 
 	// stubs
 	stubCriteria = NewCriteria(
-		NewCriterion("!^!", "!+!", ".!."),
-		NewCriterion("!^!", "!+!", ".-."),
-		NewCriterion("!!.", "(+!", "!!."),
-		NewCriterion("!!.", "(+|", "!!."),
-		NewCriterion(".!.", "!+!", "!^!"),
-		NewCriterion(".-.", "!+!", "!^!"),
-		NewCriterion(".!!", "!+(", ".!!"),
-		NewCriterion(".!!", "|+(", ".!!"))
+		NewCriterion(`!^!`, `!+!`, `.!.`),
+		NewCriterion(`!^!`, `!+!`, `.-.`),
+		NewCriterion(`!!.`, `(+!`, `!!.`),
+		NewCriterion(`!!.`, `(+|`, `!!.`),
+		NewCriterion(`.!.`, `!+!`, `!^!`),
+		NewCriterion(`.-.`, `!+!`, `!^!`),
+		NewCriterion(`.!!`, `!+(`, `.!!`),
+		NewCriterion(`.!!`, `|+(`, `.!!`))
 
 	// ****** ends of lines ******
 	verticalLinesEndCriteria = NewCriteria(
-		NewCriterion(".^.", ".|.", ".!."),
-		NewCriterion(".^.", ".|.", ".-."),
-		NewCriterion(".!.", ".|.", ".^."),
-		NewCriterion(".-.", ".|.", ".^."))
+		NewCriterion(`.^.`, `.|.`, `.!.`),
+		NewCriterion(`.^.`, `.|.`, `.-.`),
+		NewCriterion(`.!.`, `.|.`, `.^.`),
+		NewCriterion(`.-.`, `.|.`, `.^.`))
 	horizontalLinesEndCriteria = NewCriteria(
-		NewCriterion("...", "(-!", "..."),
-		NewCriterion("...", "(-|", "..."),
-		NewCriterion("...", "!-(", "..."),
-		NewCriterion("...", "|-(", "..."))
+		NewCriterion(`...`, `(-!`, `...`),
+		NewCriterion(`...`, `(-|`, `...`),
+		NewCriterion(`...`, `!-(`, `...`),
+		NewCriterion(`...`, `|-(`, `...`))
 
 	// ****** others *******
-	horizontalCrossOnLineCriteria = NewCriterion("...", "(+(", "...")
-	verticalCrossOnLineCriteria   = NewCriterion(".^.", ".+.", ".^.")
+	horizontalCrossOnLineCriteria = NewCriterion(`...`, `(+(`, `...`)
+	verticalCrossOnLineCriteria   = NewCriterion(`.^.`, `.+.`, `.^.`)
 	horizontalStarOnLineCriteria  = NewCriteria(
-		NewCriterion("...", "(*(", "..."),
-		NewCriterion("...", "!*(", "..."),
-		NewCriterion("...", "(*!", "..."))
+		NewCriterion(`...`, `(*(`, `...`),
+		NewCriterion(`...`, `!*(`, `...`),
+		NewCriterion(`...`, `(*!`, `...`))
 	verticalStarOnLineCriteria = NewCriteria(
-		NewCriterion(".^.", ".*.", ".^."),
-		NewCriterion(".!.", ".*.", ".^."),
-		NewCriterion(".^.", ".*.", ".!."))
+		NewCriterion(`.^.`, `.*.`, `.^.`),
+		NewCriterion(`.!.`, `.*.`, `.^.`),
+		NewCriterion(`.^.`, `.*.`, `.!.`))
 	loneDiagonalCriteria = NewCriteria(
-		NewCriterion(".%6%7", "%4/%8", "%3%2."),
-		NewCriterion("%1%6.", "%4\\%8", ".%2%5"))
+		NewCriterion(`.%6%7`, `%4/%8`, `%3%2.`),
+		NewCriterion(`%1%6.`, `%4\%8`, `.%2%5`))
 
 	// groups
 	intersectionCriteria = NewCriteria(crossCriteria, _KCriteria, _TCriteria, inverseKCriteria, inverseTCriteria)
