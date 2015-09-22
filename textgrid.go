@@ -183,8 +183,8 @@ func (t *TextGrid) replaceBullets() {
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
 		if t.IsBullet(c) {
-			t.SetCell(c, ' ')
-			t.SetCell(c.East(), '\u2022')
+			t.Set(c, ' ')
+			t.Set(c.East(), '\u2022')
 		}
 	}
 }
@@ -200,15 +200,13 @@ func (t *TextGrid) replaceHumanColorCodes() {
 	}
 }
 
-func (t *TextGrid) Set(x, y int, ch rune) { t.Rows[y][x] = ch }
-func (t *TextGrid) Get(x, y int) rune {
-	if x >= t.Width() || y >= t.Height() || x < 0 || y < 0 {
+func (t *TextGrid) Set(c Cell, ch rune) { t.Rows[c.Y][c.X] = ch }
+func (t *TextGrid) Get(c Cell) rune {
+	if c.X >= t.Width() || c.Y >= t.Height() || c.X < 0 || c.Y < 0 {
 		return 0
 	}
-	return t.Rows[y][x]
+	return t.Rows[c.Y][c.X]
 }
-func (t *TextGrid) SetCell(c Cell, ch rune) { t.Set(c.X, c.Y, ch) }
-func (t *TextGrid) GetCell(c Cell) rune     { return t.Get(c.X, c.Y) }
 
 func (t *TextGrid) Height() int { return len(t.Rows) }
 func (t *TextGrid) Width() int {
@@ -276,7 +274,7 @@ func FillCellsWith(rows [][]rune, cells *CellSet, ch rune) {
 
 func (t *TextGrid) seedFillOld(seed Cell, newChar rune) *CellSet {
 	filled := NewCellSet()
-	oldChar := t.GetCell(seed)
+	oldChar := t.Get(seed)
 	if oldChar == newChar {
 		return filled
 	}
@@ -287,7 +285,7 @@ func (t *TextGrid) seedFillOld(seed Cell, newChar rune) *CellSet {
 	stack := []Cell{seed}
 
 	expand := func(c Cell) {
-		if t.GetCell(c) == oldChar {
+		if t.Get(c) == oldChar {
 			stack = append(stack, c)
 		}
 	}
@@ -296,7 +294,7 @@ func (t *TextGrid) seedFillOld(seed Cell, newChar rune) *CellSet {
 		var c Cell
 		c, stack = stack[len(stack)-1], stack[:len(stack)-1]
 
-		t.SetCell(c, newChar)
+		t.Set(c, newChar)
 		filled.Add(c)
 
 		expand(c.North())
@@ -320,20 +318,20 @@ func (t *TextGrid) RemoveNonText() {
 	// remove arrowheads
 	for it := t.Iter(); it.Next(); {
 		if t.IsArrowhead(it.Cell()) {
-			t.SetCell(it.Cell(), ' ')
+			t.Set(it.Cell(), ' ')
 		}
 	}
 
 	// remove color codes
 	for _, pair := range t.FindColorCodes() {
 		c := pair.Cell
-		t.SetCell(c, ' ')
+		t.Set(c, ' ')
 		c = c.East()
-		t.SetCell(c, ' ')
+		t.Set(c, ' ')
 		c = c.East()
-		t.SetCell(c, ' ')
+		t.Set(c, ' ')
 		c = c.East()
-		t.SetCell(c, ' ')
+		t.Set(c, ' ')
 	}
 
 	// remove boundaries
@@ -344,7 +342,7 @@ func (t *TextGrid) RemoveNonText() {
 		}
 	}
 	for _, c := range rm {
-		t.SetCell(c, ' ')
+		t.Set(c, ' ')
 	}
 
 	// remove markup tags
@@ -383,7 +381,7 @@ func (t *TextGrid) findMarkupTags() []CellTagPair {
 	result := []CellTagPair{}
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
-		ch := t.GetCell(c)
+		ch := t.Get(c)
 		if ch != '{' {
 			continue
 		}
@@ -445,7 +443,7 @@ func (t *TextGrid) FindColorCodes() []CellColorPair {
 
 func CopySelectedCells(dst *TextGrid, cells *CellSet, src *TextGrid) {
 	for c := range cells.Set {
-		dst.SetCell(c, src.GetCell(c))
+		dst.Set(c, src.Get(c))
 	}
 }
 
@@ -464,7 +462,7 @@ func (t *TextGrid) DEBUG() string {
 func (t *TextGrid) ReplaceTypeOnLine() {
 	for it := t.Iter(); it.Next(); {
 		c := it.Cell()
-		ch := t.GetCell(c)
+		ch := t.Get(c)
 		if !unicode.In(ch, unicode.Digit, unicode.Letter) {
 			continue
 		}
@@ -472,60 +470,55 @@ func (t *TextGrid) ReplaceTypeOnLine() {
 		onV := t.isOnVerticalLine(c)
 		switch {
 		case onH && onV:
-			t.SetCell(c, '+')
+			t.Set(c, '+')
 		case onH:
-			t.SetCell(c, '-')
+			t.Set(c, '-')
 		case onV:
-			t.SetCell(c, '|')
+			t.Set(c, '|')
 		}
 	}
 }
 
 func (t *TextGrid) ReplacePointMarkersOnLine() {
-	for yi := 0; yi < t.Height(); yi++ {
-		for xi := 0; xi < t.Width(); xi++ {
-			cell := Cell{xi, yi}
-			c := t.GetCell(cell)
-			if !isOneOf(c, text_pointMarkers) || !t.IsStarOnLine(cell) {
-				continue
-			}
-			isOnHorizontalLine :=
-				isOneOf(t.GetCell(cell.East()), text_horizontalLines) ||
-					isOneOf(t.GetCell(cell.West()), text_horizontalLines)
-			isOnVerticalLine :=
-				isOneOf(t.GetCell(cell.North()), text_verticalLines) ||
-					isOneOf(t.GetCell(cell.South()), text_verticalLines)
-			switch {
-			case isOnHorizontalLine && isOnVerticalLine:
-				t.Set(xi, yi, '+')
-				// if DEBUG {
-				// 	fmt.Printf("replaced marker on line '%v' with +\n", c)
-				// }
-			case isOnHorizontalLine:
-				t.Set(xi, yi, '-')
-				// if DEBUG {
-				// 	fmt.Printf("replaced marker on line '%v' with -\n", c)
-				// }
-			case isOnVerticalLine:
-				t.Set(xi, yi, '|')
-				// if DEBUG {
-				// 	fmt.Printf("replaced marker on line '%v' with |\n", c)
-				// }
-			}
+	for it := t.Iter(); it.Next(); {
+		c := it.Cell()
+		ch := t.Get(c)
+		if !isOneOf(ch, text_pointMarkers) || !t.IsStarOnLine(c) {
+			continue
+		}
+		isOnHorizontalLine :=
+			isOneOf(t.Get(c.East()), text_horizontalLines) ||
+				isOneOf(t.Get(c.West()), text_horizontalLines)
+		isOnVerticalLine :=
+			isOneOf(t.Get(c.North()), text_verticalLines) ||
+				isOneOf(t.Get(c.South()), text_verticalLines)
+		switch {
+		case isOnHorizontalLine && isOnVerticalLine:
+			t.Set(c, '+')
+			// if DEBUG {
+			// 	fmt.Printf("replaced marker on line '%v' with +\n", c)
+			// }
+		case isOnHorizontalLine:
+			t.Set(c, '-')
+			// if DEBUG {
+			// 	fmt.Printf("replaced marker on line '%v' with -\n", c)
+			// }
+		case isOnVerticalLine:
+			t.Set(c, '|')
+			// if DEBUG {
+			// 	fmt.Printf("replaced marker on line '%v' with |\n", c)
+			// }
 		}
 	}
 }
 
 func (t *TextGrid) GetPointMarkersOnLine() []Cell {
 	result := []Cell{}
-	w, h := t.Width(), t.Height()
-	for yi := 0; yi < h; yi++ {
-		for xi := 0; xi < w; xi++ {
-			c := Cell{xi, yi}
-			ch := t.GetCell(c)
-			if isOneOf(ch, text_pointMarkers) && t.IsStarOnLine(c) {
-				result = append(result, c)
-			}
+	for it := t.Iter(); it.Next(); {
+		c := it.Cell()
+		ch := t.Get(c)
+		if isOneOf(ch, text_pointMarkers) && t.IsStarOnLine(c) {
+			result = append(result, c)
 		}
 	}
 	return result
@@ -533,13 +526,10 @@ func (t *TextGrid) GetPointMarkersOnLine() []Cell {
 
 func (t *TextGrid) FindArrowheads() []Cell {
 	result := []Cell{}
-	w, h := t.Width(), t.Height()
-	for yi := 0; yi < h; yi++ {
-		for xi := 0; xi < w; xi++ {
-			c := Cell{xi, yi}
-			if t.IsArrowhead(c) {
-				result = append(result, c)
-			}
+	for it := t.Iter(); it.Next(); {
+		c := it.Cell()
+		if t.IsArrowhead(c) {
+			result = append(result, c)
 		}
 	}
 	return result
@@ -558,15 +548,16 @@ func (t *TextGrid) FindStrings() []CellStringPair {
 			if t.IsBlank(start) {
 				continue
 			}
-			s := string(t.Get(x, y))
+			s := string(t.Get(start))
 			x++
-			c := t.Get(x, y)
+			ch := t.Get(Cell{x, y})
 			for {
-				s += string(c)
+				s += string(ch)
 				x++
-				c = t.Get(x, y)
-				next := t.Get(x+1, y)
-				if (c == ' ' || c == 0) && (next == ' ' || next == 0) {
+				c := Cell{x, y}
+				ch = t.Get(c)
+				next := t.Get(c.East())
+				if (ch == ' ' || ch == 0) && (next == ' ' || next == 0) {
 					break
 				}
 			}

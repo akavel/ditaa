@@ -102,7 +102,7 @@ func NewDiagram(grid *TextGrid) *Diagram {
 
 		for yi := 0; yi < 3*h; yi++ {
 			for xi := 0; xi < 3*w; xi++ {
-				if !fillBuffer.IsBlankXY(xi, yi) {
+				if !fillBuffer.IsBlankXY(Cell{xi, yi}) {
 					continue
 				}
 
@@ -315,7 +315,7 @@ func NewDiagram(grid *TextGrid) *Diagram {
 	gaps := textGroupGrid.GetAllBlanksBetweenCharacters()
 	//kludge
 	for c := range gaps.Set {
-		textGroupGrid.SetCell(c, '|')
+		textGroupGrid.Set(c, '|')
 	}
 	nonBlank := textGroupGrid.GetAllNonBlank()
 	textGroups := breakIntoDistinctBoundaries(nonBlank)
@@ -432,7 +432,7 @@ func createClosedComponentFromBoundaryCells(grid *TextGrid, cells *CellSet, gg g
 	shape := graphical.NewShape()
 	shape.Closed = true
 	for c := range cells.Set {
-		if isOneOf(grid.GetCell(c), text_dashedLines) {
+		if isOneOf(grid.Get(c), text_dashedLines) {
 			shape.Dashed = true
 			break
 		}
@@ -646,7 +646,7 @@ func makeScaledOneThirdEquivalent(cells *CellSet) *CellSet {
 	for it := gridBig.Iter(); it.Next(); {
 		c := it.Cell()
 		if !gridBig.IsBlank(c) {
-			gridSmall.Set(c.X/3, c.Y/3, '*')
+			gridSmall.Set(Cell{c.X / 3, c.Y / 3}, '*')
 		}
 	}
 	return gridSmall.GetAllNonBlank()
@@ -657,11 +657,11 @@ func findBoundariesExpandingFrom(grid *TextGrid, seed Cell) *CellSet {
 	if grid.IsOutOfBounds(seed) {
 		return boundaries
 	}
-	oldChar := grid.GetCell(seed)
+	oldChar := grid.Get(seed)
 	newChar := rune(1) //TODO: kludge
 	stack := []Cell{seed}
 	expand := func(c Cell) {
-		switch grid.GetCell(c) {
+		switch grid.Get(c) {
 		case oldChar:
 			stack = append(stack, c)
 		case '*':
@@ -671,7 +671,7 @@ func findBoundariesExpandingFrom(grid *TextGrid, seed Cell) *CellSet {
 	for len(stack) > 0 {
 		var c Cell
 		c, stack = stack[len(stack)-1], stack[:len(stack)-1]
-		grid.SetCell(c, newChar)
+		grid.Set(c, newChar)
 		expand(c.North())
 		expand(c.South())
 		expand(c.East())
@@ -702,7 +702,7 @@ func breakIntoDistinctBoundaries(cells *CellSet) []*CellSet {
 	FillCellsWith(boundaryGrid.Rows, cells, '*')
 
 	for c := range cells.Set {
-		if boundaryGrid.IsBlankXY(c.X, c.Y) {
+		if boundaryGrid.IsBlankXY(c) {
 			continue
 		}
 		boundarySet := boundaryGrid.fillContinuousArea(c, ' ')

@@ -50,7 +50,7 @@ func (g *AbstractionGrid) GetAsTextGrid() *TextGrid {
 	for y := range g.Rows {
 		for x, ch := range g.Rows[y] {
 			if ch != ' ' {
-				t.Set(x/3, y/3, '*')
+				t.Set(Cell{x / 3, y / 3}, '*')
 			}
 		}
 	}

@@ -21,27 +21,27 @@ func isAlphNum(ch rune) bool             { return unicode.IsLetter(ch) || unicod
 func isOneOf(ch rune, group string) bool { return strings.ContainsRune(group, ch) }
 
 func (t *TextGrid) IsBullet(c Cell) bool {
-	ch := t.GetCell(c)
+	ch := t.Get(c)
 	return (ch == 'o' || ch == '*') &&
 		t.IsBlankNon0(c.East()) &&
 		t.IsBlankNon0(c.West()) &&
-		isAlphNum(t.GetCell(c.East().East()))
+		isAlphNum(t.Get(c.East().East()))
 }
 
 func (t *TextGrid) IsOutOfBounds(c Cell) bool {
 	return c.X >= t.Width() || c.Y >= t.Height() || c.X < 0 || c.Y < 0
 }
 
-func (t *TextGrid) IsBlankNon0(c Cell) bool { return t.GetCell(c) == ' ' }
+func (t *TextGrid) IsBlankNon0(c Cell) bool { return t.Get(c) == ' ' }
 func (t *TextGrid) IsBlank(c Cell) bool {
-	ch := t.GetCell(c)
+	ch := t.Get(c)
 	if ch == 0 {
 		return false // FIXME: should this be false, or true (see 'isBlank(x,y)' in Java)
 	}
 	return ch == ' '
 }
-func (t *TextGrid) IsBlankXY(x, y int) bool {
-	ch := t.Get(x, y)
+func (t *TextGrid) IsBlankXY(c Cell) bool {
+	ch := t.Get(c)
 	if ch == 0 {
 		return true
 	}
@@ -49,7 +49,7 @@ func (t *TextGrid) IsBlankXY(x, y int) bool {
 }
 
 func (t *TextGrid) IsBoundary(c Cell) bool {
-	ch := t.Get(c.X, c.Y)
+	ch := t.Get(c)
 	switch ch {
 	case 0:
 		return false
@@ -102,14 +102,14 @@ func (t *TextGrid) IsVerticalCrossOnLine(c Cell) bool {
 
 func (t *TextGrid) IsCorner(c Cell) bool { return t.IsNormalCorner(c) || t.IsRoundCorner(c) }
 func (t *TextGrid) IsHorizontalLine(c Cell) bool {
-	ch := t.Get(c.X, c.Y)
+	ch := t.Get(c)
 	if ch == 0 {
 		return false
 	}
 	return isOneOf(ch, text_horizontalLines)
 }
 func (t *TextGrid) IsVerticalLine(c Cell) bool {
-	ch := t.Get(c.X, c.Y)
+	ch := t.Get(c)
 	if ch == 0 {
 		return false
 	}
@@ -234,7 +234,7 @@ func (t *TextGrid) hasEntryPoint(c Cell, entryid int) bool {
 	if entryid >= len(entries) {
 		return false
 	}
-	return isOneOf(t.GetCell(c), entries[entryid])
+	return isOneOf(t.Get(c), entries[entryid])
 }
 
 func (t *TextGrid) HasBlankCells() bool {
@@ -247,18 +247,18 @@ func (t *TextGrid) HasBlankCells() bool {
 }
 
 func (t *TextGrid) CellContainsDashedLineChar(c Cell) bool {
-	return isOneOf(t.GetCell(c), text_dashedLines)
+	return isOneOf(t.Get(c), text_dashedLines)
 }
 
 func (t *TextGrid) IsArrowhead(c Cell) bool {
 	return t.IsNorthArrowhead(c) || t.IsSouthArrowhead(c) || t.IsWestArrowhead(c) || t.IsEastArrowhead(c)
 }
 
-func (t *TextGrid) IsNorthArrowhead(c Cell) bool { return t.GetCell(c) == '^' }
-func (t *TextGrid) IsWestArrowhead(c Cell) bool  { return t.GetCell(c) == '<' }
-func (t *TextGrid) IsEastArrowhead(c Cell) bool  { return t.GetCell(c) == '>' }
+func (t *TextGrid) IsNorthArrowhead(c Cell) bool { return t.Get(c) == '^' }
+func (t *TextGrid) IsWestArrowhead(c Cell) bool  { return t.Get(c) == '<' }
+func (t *TextGrid) IsEastArrowhead(c Cell) bool  { return t.Get(c) == '>' }
 func (t *TextGrid) IsSouthArrowhead(c Cell) bool {
-	return isOneOf(t.GetCell(c), "Vv") && t.IsVerticalLine(c.North())
+	return isOneOf(t.Get(c), "Vv") && t.IsVerticalLine(c.North())
 }
 
 func (t *TextGrid) IsPointCell(c Cell) bool {
