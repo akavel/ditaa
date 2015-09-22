@@ -183,21 +183,20 @@ func (t *Grid) seedFillOld(seed Cell, newChar rune) *CellSet {
 		return filled
 	}
 
-	stack := []Cell{seed}
-
+	var stack []Cell
 	expand := func(c Cell) {
-		if t.Get(c) == oldChar {
-			stack = append(stack, c)
+		if t.Get(c) != oldChar {
+			return
 		}
+		stack = append(stack, c)
+		filled.Add(c)
+		t.Set(c, newChar)
 	}
+	expand(seed)
 
 	for len(stack) > 0 {
 		var c Cell
 		c, stack = stack[len(stack)-1], stack[:len(stack)-1]
-
-		t.Set(c, newChar)
-		filled.Add(c)
-
 		expand(c.North())
 		expand(c.South())
 		expand(c.East())
