@@ -9,7 +9,7 @@ rmdir /q/s got
 mkdir got
 
 :: cd %1
-for /r %1\orig-java\tests\images-expected %%f in (*.png) do (
+for /r %1\testdata %%f in (*.txt.png) do (
 	copy %%f expected\
 )
 for /r %1\tmp\testimgs %%f in (*.png) do (
