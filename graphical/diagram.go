@@ -6,7 +6,7 @@ import (
 	"image/color"
 	"sort"
 
-	"github.com/akavel/ditaa/fontmeasure"
+	"../fontmeasure"
 
 	"github.com/BurntSushi/graphics-go/graphics"
 	"github.com/BurntSushi/graphics-go/graphics/interp"

@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/akavel/ditaa/graphical"
+	"./graphical"
 )
 
 const (

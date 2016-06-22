@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/akavel/ditaa/graphical"
+	"./graphical"
 )
 
 func NewSmallLine(grid *TextGrid, c Cell, gg graphical.Grid) *graphical.Shape {

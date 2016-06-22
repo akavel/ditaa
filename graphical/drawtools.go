@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/image/math/fixed"
 
-	"github.com/akavel/ditaa/graphical/dasher"
+	"./dasher"
 	"github.com/golang/freetype/raster"
 )
 
