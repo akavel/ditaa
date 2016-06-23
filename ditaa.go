@@ -11,6 +11,8 @@ import (
 	"github.com/akavel/ditaa/graphical"
 )
 
+const version = "g1.0.0 (2016.06.23)"
+
 const (
 	DEFAULT_TAB_SIZE = 8
 	CELL_WIDTH       = 10
@@ -18,12 +20,17 @@ const (
 )
 
 func main() {
-	if len(os.Args[1:]) != 2 {
+	args := os.Args[1:]
+	switch {
+	case len(args) == 1 && args[0] == "--version":
+		fmt.Fprintf(os.Stderr, "ditaa-go version %s\n", version)
+		os.Exit(1)
+	case len(args) != 2:
 		fmt.Fprintf(os.Stderr, "USAGE: %s INFILE OUTFILE.png\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	err := run(os.Args[1], os.Args[2])
+	err := run(args[0], args[1])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(2)
