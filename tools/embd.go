@@ -1,3 +1,5 @@
+// x+build none
+
 /*
 The MIT License (MIT)
 
