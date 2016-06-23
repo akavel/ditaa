@@ -1,5 +1,5 @@
 // +build none
-
+// cross_compile builds ditaa for all known platforms. Call with: go run tools/cross_compile.go
 package main
 
 import (
@@ -10,30 +10,25 @@ import (
 	"path"
 )
 
-type Target struct {
-	os   string
-	arch string
-}
-
-var targets = []Target{
-	{os: "windows", arch: "386"},
-	{os: "windows", arch: "amd64"},
-	{os: "darwin", arch: "386"},
-	{os: "darwin", arch: "amd64"},
-	{os: "linux", arch: "386"},
-	{os: "linux", arch: "amd64"},
-	{os: "linux", arch: "arm"},
-	{os: "freebsd", arch: "386"},
-	{os: "freebsd", arch: "amd64"},
-	{os: "freebsd", arch: "arm"},
-	{os: "netbsd", arch: "386"},
-	{os: "netbsd", arch: "amd64"},
-	{os: "netbsd", arch: "arm"},
-	{os: "openbsd", arch: "386"},
-	{os: "openbsd", arch: "amd64"},
-	{os: "plan9", arch: "386"},
-	{os: "plan9", arch: "amd64"},
-	{os: "solaris", arch: "amd64"},
+var targets = []struct{ os, arch string }{
+	{"windows", "386"},
+	{"windows", "amd64"},
+	{"darwin", "386"},
+	{"darwin", "amd64"},
+	{"linux", "386"},
+	{"linux", "amd64"},
+	{"linux", "arm"},
+	{"freebsd", "386"},
+	{"freebsd", "amd64"},
+	{"freebsd", "arm"},
+	{"netbsd", "386"},
+	{"netbsd", "amd64"},
+	{"netbsd", "arm"},
+	{"openbsd", "386"},
+	{"openbsd", "amd64"},
+	{"plan9", "386"},
+	{"plan9", "amd64"},
+	{"solaris", "amd64"},
 }
 
 func main() {
@@ -41,7 +36,12 @@ func main() {
 		log.Fatal("Please call from main dir as 'go run tools/cross_compile.go'")
 	}
 
-	os.Mkdir("bin", 0755)
+	if err := os.Mkdir("bin", 0755); err != nil {
+		if !os.IsExist(err) {
+			// it's okay for the path to exist already
+			log.Fatal(err)
+		}
+	}
 
 	for _, target := range targets {
 		// build environment
@@ -57,13 +57,11 @@ func main() {
 
 		// build
 		fmt.Printf("Building %s...", out)
-		cmd := exec.Command("go", "build", "-o", out)
-		output, err := cmd.CombinedOutput()
+		output, err := exec.Command("go", "build", "-o", out).CombinedOutput()
 		if err != nil {
 			fmt.Printf("\n%s\n", output)
 		} else {
 			fmt.Printf(" done.\n")
 		}
-
 	}
 }
