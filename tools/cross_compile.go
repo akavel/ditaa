@@ -1,4 +1,5 @@
 // +build none
+
 // cross_compile builds ditaa for all known platforms. Call with: go run tools/cross_compile.go
 package main
 
