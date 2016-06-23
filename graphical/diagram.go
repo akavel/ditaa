@@ -8,8 +8,8 @@ import (
 
 	"github.com/akavel/ditaa/fontmeasure"
 
-	"code.google.com/p/graphics-go/graphics"
-	"code.google.com/p/graphics-go/graphics/interp"
+	"github.com/BurntSushi/graphics-go/graphics"
+	"github.com/BurntSushi/graphics-go/graphics/interp"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 )
