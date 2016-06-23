@@ -37,11 +37,10 @@ func main() {
 		log.Fatal("Please call from main dir as 'go run tools/cross_compile.go'")
 	}
 
-	if err := os.Mkdir("bin", 0755); err != nil {
-		if !os.IsExist(err) {
-			// it's okay for the path to exist already
-			log.Fatal(err)
-		}
+	err := os.Mkdir("bin", 0755)
+	if err != nil && !os.IsExist(err) {
+		// it's okay for the path to exist already
+		log.Fatal(err)
 	}
 
 	for _, target := range targets {
