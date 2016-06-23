@@ -57,7 +57,7 @@ func main() {
 
 		// build
 		fmt.Printf("Building %s...", out)
-		output, err := exec.Command("go", "build", "-o", out).CombinedOutput()
+		output, err := exec.Command("go", "build", "-i", "-o", out).CombinedOutput()
 		if err != nil {
 			fmt.Printf("\n%s\n", output)
 		} else {
