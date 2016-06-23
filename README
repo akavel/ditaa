@@ -1,3 +1,8 @@
 ditaa is a small command-line utility that can convert diagrams drawn using ascii art ('drawings' that contain characters that resemble lines like | / - ), into proper bitmap graphics. See http://www.ditaa.org
 
 results from the current version of the Go port (in progress) can be compared visually side-by-side with results from the original at: http://akavel.github.io/ditaa
+
+the Go fork of ditaa is "dual-licensed": you can use it under terms of either:
+- GPLv2 or (at your option) any later version; or
+- LGPLv3 or (at your option) any later version.
+(it was forked at the point where the original Java codebase was switched from GPLv2+ to LGPLv3+)
