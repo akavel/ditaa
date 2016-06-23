@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/xml"
 	"fmt"
-	"github.com/akavel/ditaa/graphical"
+	"../graphical"
 	"image"
 	"image/png"
 	"os"

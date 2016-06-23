@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/akavel/ditaa/graphical"
+	"./graphical"
 )
 
 type Cell graphical.Cell //struct{ X, Y int }

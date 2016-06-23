@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/akavel/ditaa/graphical"
+	"./graphical"
 )
 
 const blankBorderSize = 2

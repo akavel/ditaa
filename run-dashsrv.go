@@ -11,7 +11,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/akavel/ditaa/graphical/dasher"
+	"./graphical/dasher"
 	"github.com/golang/freetype/raster"
 	"golang.org/x/image/math/fixed"
 )

@@ -7,9 +7,9 @@ import (
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 
-	"github.com/akavel/ditaa/embd"
-	"github.com/akavel/ditaa/fontmeasure"
-	"github.com/akavel/ditaa/graphical"
+	"./embd"
+	"./fontmeasure"
+	"./graphical"
 )
 
 var baseFont = func() *truetype.Font {

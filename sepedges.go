@@ -5,7 +5,7 @@ import (
 
 	"github.com/akavel/polyclip-go"
 
-	"github.com/akavel/ditaa/graphical"
+	"./graphical"
 )
 
 type edgeType int
